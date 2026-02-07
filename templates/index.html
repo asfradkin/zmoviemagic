@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire TV Cinema</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: white;
+            font-family: sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 { text-align: center; }
+
+        /* The Responsive Grid */
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Movie Card Styling */
+        .movie-card {
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .movie-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 150, 255, 0.6);
+            z-index: 10;
+        }
+
+        .movie-card img {
+            width: 100%;
+            height: auto; /* Maintains aspect ratio */
+            display: block;
+            aspect-ratio: 2/3; /* Forces poster shape */
+            object-fit: cover;
+        }
+
+        .movie-title {
+            padding: 6px;
+            text-align: center;
+            font-size: 0.75em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Toast Notification Styling */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 2px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            border: 1px solid #00d4ff;
+        }
+
+        #toast.show { visibility: visible; -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+    </style>
+</head>
+<body>
+
+    <h1>Now Showing</h1>
+
+    <div class="movie-grid">
+        {% for movie in movies %}
+        <div class="movie-card" onclick='{% if movie.id %}playMovie({{ movie.id|tojson }}, {{ movie.title|tojson }}){% else %}showToast({{ ("Add Disney+ ID for: " + movie.title)|tojson }}){% endif %}'>
+            <img src="{{ movie.poster or 'https://placehold.co/500x750/333/666?text=No+poster' }}" alt="{{ movie.title }}">
+            <div class="movie-title">{{ movie.title }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="toast">Playing...</div>
+
+    <script>
+        function playMovie(id, title) {
+            if (!id) { showToast("No Disney+ ID for " + title); return; }
+            showToast("Playing " + title + " on Fire TV...");
+
+            fetch('/play/' + id)
+                .then(response => response.json())
+                .then(data => {
+                    if(data.status === 'error') {
+                        showToast("Error: " + data.message);
+                    }
+                })
+                .catch(error => showToast("Connection Error"));
+        }
+
+        function showToast(message) {
+            var x = document.getElementById("toast");
+            x.innerText = message;
+            x.className = "show";
+            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+        }
+    </script>
+
+</body>
+</html>
