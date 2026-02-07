@@ -5,9 +5,9 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=REPLACE_WITH_YOUR_USERNAME
-WorkingDirectory=REPLACE_WITH_FULL_PATH_TO_zmoviemagic
-ExecStart=REPLACE_WITH_FULL_PATH_TO_zmoviemagic/venv/bin/python app.py
+User=afradkin
+WorkingDirectory=/home/afradkin/zmoviemagic
+ExecStart=/home/afradkin/zmoviemagic/venv/bin/python app.py
 Restart=always
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1
