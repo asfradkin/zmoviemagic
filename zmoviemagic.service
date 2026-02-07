@@ -1,0 +1,16 @@
+[Unit]
+Description=zmoviemagic Fire TV Cinema web app
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=REPLACE_WITH_YOUR_USERNAME
+WorkingDirectory=REPLACE_WITH_FULL_PATH_TO_zmoviemagic
+ExecStart=REPLACE_WITH_FULL_PATH_TO_zmoviemagic/venv/bin/python app.py
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

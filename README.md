@@ -50,6 +50,30 @@ python app.py
 # Listens on 0.0.0.0:5000 by default. Use a reverse proxy (nginx) or firewall as needed.
 ```
 
+### Start on boot and restart on failure (systemd)
+
+1. Edit `zmoviemagic.service` in the project: set `User`, `WorkingDirectory`, and `ExecStart` to your username and full path to the project (e.g. `/home/andre/zmoviemagic`). The `ExecStart` line must point to your venv’s Python: `.../zmoviemagic/venv/bin/python app.py`.
+
+2. Install and enable the service:
+
+```bash
+sudo cp zmoviemagic.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable zmoviemagic   # start on boot
+sudo systemctl start zmoviemagic    # start now
+sudo systemctl status zmoviemagic   # check it’s running
+```
+
+3. Useful commands:
+
+```bash
+sudo systemctl stop zmoviemagic     # stop
+sudo systemctl restart zmoviemagic  # restart
+journalctl -u zmoviemagic -f        # follow logs
+```
+
+The service is set to `Restart=always` with `RestartSec=5`, so it will come back up after a crash or reboot.
+
 ## Fire TV
 
 - Enable **Developer options** and **ADB debugging** (over network) on the Fire TV
