@@ -3,10 +3,13 @@ from ppadb.client import Client as AdbClient
 from dotenv import load_dotenv
 import subprocess
 import os
+import re
 import shutil
 import urllib.request
 import urllib.parse
 import json
+import time
+from functools import lru_cache
 
 load_dotenv()
 
@@ -16,8 +19,18 @@ app = Flask(__name__)
 FIRE_TV_IP = os.environ.get("FIRE_TV_IP", "").strip()
 TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "").strip()
 
+# Flask secret for session/signing (set in .env for production)
+app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "dev-change-in-production")
+
 if not TMDB_API_KEY:
     raise SystemExit("TMDB_API_KEY is not set. Copy .env.example to .env and add your key (see README).")
+
+# Disney+ content IDs are alphanumeric, hyphen, underscore; reject anything else to avoid injection
+VIDEO_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_-]+$")
+
+# Optional: minimum seconds between /play requests (0 = disabled)
+PLAY_COOLDOWN_SECONDS = int(os.environ.get("PLAY_COOLDOWN_SECONDS", "2"))
+_last_play_time = 0.0
 
 # Simple list of movie names; posters are fetched from TMDB at startup.
 MOVIE_NAMES = [
@@ -98,8 +111,9 @@ def build_library():
 LIBRARY = build_library()
 
 
+@lru_cache(maxsize=1)
 def find_adb():
-    """Return path to adb executable, or None if not found."""
+    """Return path to adb executable, or None if not found. Cached after first call."""
     # First try PATH
     adb_path = shutil.which("adb")
     if adb_path:
@@ -141,14 +155,32 @@ def get_device():
         print(f"ADB Error: {e}")
         return None, str(e)
 
+# Allow browsers to cache the index page briefly (library is static until app restart)
+INDEX_CACHE_MAX_AGE = 300  # seconds
+
 @app.route('/')
 def index():
     """Serves the movie poster grid"""
-    return render_template('index.html', movies=LIBRARY)
+    resp = app.make_response(render_template('index.html', movies=LIBRARY))
+    resp.headers["Cache-Control"] = f"public, max-age={INDEX_CACHE_MAX_AGE}"
+    return resp
 
 @app.route('/play/<video_id>')
 def play(video_id):
     """Deep links the video on Fire TV"""
+    global _last_play_time
+    if not video_id or not VIDEO_ID_PATTERN.match(video_id):
+        return jsonify({"status": "error", "message": "Invalid video ID"}), 400
+
+    if PLAY_COOLDOWN_SECONDS > 0:
+        now = time.monotonic()
+        if now - _last_play_time < PLAY_COOLDOWN_SECONDS:
+            return jsonify({
+                "status": "error",
+                "message": f"Please wait {PLAY_COOLDOWN_SECONDS} seconds between plays.",
+            }), 429
+        _last_play_time = now
+
     device, err = get_device()
 
     if not device:
@@ -179,5 +211,6 @@ def play(video_id):
         return jsonify({"status": "error", "message": err_msg}), 500
 
 if __name__ == '__main__':
+    debug = os.environ.get("FLASK_DEBUG", "").lower() in ("1", "true", "yes")
     # Host='0.0.0.0' makes it accessible to other devices on your network
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=debug)

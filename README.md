@@ -15,6 +15,8 @@ A simple web app that shows a Netflix-style grid of movies and can launch them o
    ```
 4. In `app.py` you can still adjust `MOVIE_NAMES`, `DISNEY_IDS`, and `POSTER_OVERRIDES`
 
+**Optional .env:** `FLASK_SECRET_KEY` (for production), `FLASK_DEBUG=1` (dev only), `PLAY_COOLDOWN_SECONDS` (default 2, min seconds between Play requests).
+
 ## Installing on Ubuntu Server
 
 ```bash
