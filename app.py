@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from ppadb.client import Client as AdbClient
+from dotenv import load_dotenv
 import subprocess
 import os
 import shutil
@@ -7,11 +8,16 @@ import urllib.request
 import urllib.parse
 import json
 
+load_dotenv()
+
 app = Flask(__name__)
 
-# --- CONFIGURATION ---
-FIRE_TV_IP = "192.168.86.63"  # REPLACE WITH YOUR FIRE TV IP
-TMDB_API_KEY = "6704ba99e331ca9d5c37dd761a47fb1d"
+# --- CONFIGURATION (from .env) ---
+FIRE_TV_IP = os.environ.get("FIRE_TV_IP", "").strip()
+TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "").strip()
+
+if not TMDB_API_KEY:
+    raise SystemExit("TMDB_API_KEY is not set. Copy .env.example to .env and add your key (see README).")
 
 # Simple list of movie names; posters are fetched from TMDB at startup.
 MOVIE_NAMES = [
@@ -27,6 +33,11 @@ MOVIE_NAMES = [
     "Frozen 2",
     "Melody Time",
     "Wall-E",
+    "Mulan",
+    "Wreck it Ralph 2",
+    "The Aristocats",
+    "Fantasia",
+    "Fantasia 2000",
 ]
 
 # Optional: Override TMDB poster with your own image URL (title -> URL).
