@@ -1,0 +1,2 @@
+Flask>=2.0.0
+pure-python-adb>=0.3.0.dev0
