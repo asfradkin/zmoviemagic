@@ -32,5 +32,7 @@ fi
 # Restart Service
 echo "Restarting $SERVICE_NAME..."
 sudo systemctl restart "$SERVICE_NAME"
+sudo chmod +x deploy.sh
+
 
 echo "Deployment complete!"
