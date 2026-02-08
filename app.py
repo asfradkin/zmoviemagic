@@ -136,6 +136,12 @@ def find_adb():
                 candidate = os.path.join(base, "Android", "Sdk", "platform-tools", "adb.exe")
                 if os.path.isfile(candidate):
                     return candidate
+    else:
+        # Common Linux/macOS locations
+        for candidate in ["/usr/bin/adb", "/usr/local/bin/adb", "/opt/android-sdk/platform-tools/adb"]:
+            if os.path.isfile(candidate):
+                return candidate
+                
     return None
 
 # Global ADB state
