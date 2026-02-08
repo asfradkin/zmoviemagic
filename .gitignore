@@ -8,6 +8,7 @@ venv/
 .venv/
 env/
 .env
+.playwright_user_data/
 *.egg-info/
 .eggs/
 
