@@ -2,7 +2,7 @@
 set -e
 
 # Configuration (update these paths for your server)
-APP_DIR="/home/ubuntu/zmoviemagic"
+APP_DIR="/home/afradkin/zmoviemagic"
 VENV_DIR="$APP_DIR/venv"
 SERVICE_NAME="zmoviemagic"
 
@@ -15,9 +15,10 @@ if [ ! -d "$APP_DIR" ]; then
 fi
 cd "$APP_DIR"
 
-# Pull latest changes
+# Pull latest changes (Force sync to match GitHub)
 echo "Pulling latest code..."
-git pull origin main
+git fetch --all
+git reset --hard origin/main
 
 # Update dependencies
 if [ -d "$VENV_DIR" ]; then

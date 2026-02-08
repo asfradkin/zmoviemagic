@@ -4,15 +4,15 @@ After=network.target
 
 [Service]
 # User running the application (change 'ubuntu' to your actual username if different)
-User=ubuntu
+User=afradkin
 Group=ubuntu
 
 # Path to the application directory
-WorkingDirectory=/home/ubuntu/zmoviemagic
+WorkingDirectory=/home/afradkin/zmoviemagic
 
 # Environment variables
 # Make sure .env exists in the WorkingDirectory
-Environment="PATH=/home/ubuntu/zmoviemagic/venv/bin"
+Environment="PATH=/home/afradkin/zmoviemagic/venv/bin"
 
 # Command to start the application using gunicorn
 # Ensure 'gunicorn' is installed in your venv
