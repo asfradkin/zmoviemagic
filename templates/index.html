@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +14,9 @@
             padding: 20px;
         }
 
-        h1 { text-align: center; }
+        h1 {
+            text-align: center;
+        }
 
         /* The Responsive Grid */
         .movie-grid {
@@ -42,9 +45,11 @@
 
         .movie-card img {
             width: 100%;
-            height: auto; /* Maintains aspect ratio */
+            height: auto;
+            /* Maintains aspect ratio */
             display: block;
-            aspect-ratio: 2/3; /* Forces poster shape */
+            aspect-ratio: 2/3;
+            /* Forces poster shape */
             object-fit: cover;
         }
 
@@ -74,20 +79,48 @@
             border: 1px solid #00d4ff;
         }
 
-        #toast.show { visibility: visible; -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
-        
-        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
-        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+        #toast.show {
+            visibility: visible;
+            -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        @keyframes fadein {
+            from {
+                bottom: 0;
+                opacity: 0;
+            }
+
+            to {
+                bottom: 30px;
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeout {
+            from {
+                bottom: 30px;
+                opacity: 1;
+            }
+
+            to {
+                bottom: 0;
+                opacity: 0;
+            }
+        }
     </style>
 </head>
+
 <body>
 
-    <h1>Now Showing</h1>
+    <h1>Zach's Movie Magic -- Now Showing</h1>
 
     <div class="movie-grid">
         {% for movie in movies %}
-        <div class="movie-card" onclick='{% if movie.id %}playMovie({{ movie.id|tojson }}, {{ movie.title|tojson }}){% else %}showToast({{ ("Add Disney+ ID for: " + movie.title)|tojson }}){% endif %}'>
-            <img src="{{ movie.poster or 'https://placehold.co/500x750/333/666?text=No+poster' }}" alt="{{ movie.title }}">
+        <div class="movie-card"
+            onclick='{% if movie.id %}playMovie({{ movie.id|tojson }}, {{ movie.title|tojson }}){% else %}showToast({{ ("Add Disney+ ID for: " + movie.title)|tojson }}){% endif %}'>
+            <img src="{{ movie.poster or 'https://placehold.co/500x750/333/666?text=No+poster' }}"
+                alt="{{ movie.title }}">
             <div class="movie-title">{{ movie.title }}</div>
         </div>
         {% endfor %}
@@ -103,7 +136,7 @@
             fetch('/play/' + id)
                 .then(response => response.json())
                 .then(data => {
-                    if(data.status === 'error') {
+                    if (data.status === 'error') {
                         showToast("Error: " + data.message);
                     }
                 })
@@ -114,9 +147,10 @@
             var x = document.getElementById("toast");
             x.innerText = message;
             x.className = "show";
-            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+            setTimeout(function () { x.className = x.className.replace("show", ""); }, 3000);
         }
     </script>
 
 </body>
+
 </html>

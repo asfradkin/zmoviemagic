@@ -1,16 +1,25 @@
 [Unit]
-Description=zmoviemagic Fire TV Cinema web app
-After=network-online.target
-Wants=network-online.target
+Description=ZMovieMagic - Disney+ Fire TV Controller
+After=network.target
 
 [Service]
-Type=simple
-User=afradkin
-WorkingDirectory=/home/afradkin/zmoviemagic
-ExecStart=/home/afradkin/zmoviemagic/venv/bin/python app.py
+# User running the application (change 'ubuntu' to your actual username if different)
+User=ubuntu
+Group=ubuntu
+
+# Path to the application directory
+WorkingDirectory=/home/ubuntu/zmoviemagic
+
+# Environment variables
+# Make sure .env exists in the WorkingDirectory
+Environment="PATH=/home/ubuntu/zmoviemagic/venv/bin"
+
+# Command to start the application using gunicorn
+# Ensure 'gunicorn' is installed in your venv
+ExecStart=/home/ubuntu/zmoviemagic/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 app:app
+
+# Restart automatically if it crashes
 Restart=always
-RestartSec=5
-Environment=PYTHONUNBUFFERED=1
 
 [Install]
 WantedBy=multi-user.target
