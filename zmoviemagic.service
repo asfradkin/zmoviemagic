@@ -5,7 +5,7 @@ After=network.target
 [Service]
 # User running the application (change 'ubuntu' to your actual username if different)
 User=afradkin
-Group=ubuntu
+Group=afradkin
 
 # Path to the application directory
 WorkingDirectory=/home/afradkin/zmoviemagic
@@ -16,7 +16,7 @@ Environment="PATH=/home/afradkin/zmoviemagic/venv/bin"
 
 # Command to start the application using gunicorn
 # Ensure 'gunicorn' is installed in your venv
-ExecStart=/home/ubuntu/zmoviemagic/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 app:app
+ExecStart=/home/afradkin/zmoviemagic/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 app:app
 
 # Restart automatically if it crashes
 Restart=always
