@@ -1,6 +1,8 @@
-# zmoviemagic
+# Zach's Movie Magic
 
-A simple web app that shows a Netflix-style grid of movies and can launch them on Fire TV via Disney+ deep links (ADB).
+A simple web app that shows a Netflix-style grid of movies and can launch them on Fire TV via Disney+ deep links (ADB).  This was designed for my son Zach, who cannot use a standard remote control.  This allows him to control the movies he wants to watch on the TV by touching pictures of them on his iPad or any other device with a web browser.  I run this locally on an old laptop running Ubuntu.  The Fire TV stick is the player and it is a simple and adaptable framework.  I also use TMDB to get the movie posters dynamically from the free API and service they provide.
+
+My only mission is to make it easy for Zach and other kids like him to control a part of their lives.  Please use this code, modify it as you please and share.  Per the license, this is not designed to make a profit or be sold - this is meant to help families and children - not make money.  If your intent is to make money, please go do that on your own.  Thank you for your understanding and respecting my wishes of helping people over profit.  
 
 ## Setup
 
@@ -124,7 +126,8 @@ A GitHub Actions workflow (`.github/workflows/deploy.yml`) deploys to your Ubunt
 
 - Enable **Developer options** and **ADB debugging** (over network) on the Fire TV
 - Connect from PC: `adb connect YOUR_FIRE_TV_IP:5555`
-- Accept the “Allow USB debugging?” prompt on the TV when you first connect
+- Accept the “Allow USB debugging?” prompt on the TV when you first connect. **Check "Always allow from this computer"** to avoid repeated prompts.
+- If you don't see the prompt, try running `adb kill-server` and `adb connect YOUR_FIRE_TV_IP:5555` again.
 
 ## Run
 
@@ -133,3 +136,26 @@ python app.py
 ```
 
 Open http://localhost:5000 (or your machine’s IP). Click a movie to send it to the Fire TV.
+
+## Troubleshooting
+
+### "device unauthorized" Error
+If you see an error like `ERROR: 'FAIL' 00a7device unauthorized`:
+1.  Look at your Fire TV screen.
+2.  You should see a prompt "Allow USB debugging?".
+3.  Select **Always allow from this computer** and click **Allow**.
+4.  If the prompt doesn't appear, run `adb kill-server` on your server/PC and try to connect again.
+
+### "adb server not found" (Linux)
+If `adb` cannot be found even though it is installed:
+1.  Ensure you have installed `android-tools-adb` (`apt install android-tools-adb`).
+2.  The application tries to find `adb` in common locations (`/usr/bin/adb`, etc.).
+3.  If running as a systemd service, ensure the `PATH` variable in `zmoviemagic.service` includes `/usr/bin`:
+    ```ini
+    Environment="PATH=/path/to/venv/bin:/usr/bin:/bin"
+    ```
+
+### Playback Latency
+The application uses persistent ADB connections and batched shell commands to minimize delay. If playback feels slow:
+-   Ensure your server and Fire TV are on the same Wi-Fi/network (5GHz recommended).
+-   The first launch after server restart might take slightly longer to establish the initial connection.
