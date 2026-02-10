@@ -137,6 +137,22 @@ python app.py
 
 Open http://localhost:5000 (or your machine’s IP). Click a movie to send it to the Fire TV.
 
+
+## Adding Movies & Custom Posters
+
+The application loads movies from `movies.json`. It automatically fetches posters from TMDB if the `poster` field is empty.
+
+To add a movie with a custom poster (or one not in TMDB):
+1.  Open `movies.json`.
+2.  Add a new entry with the `title`, `id` (Disney+ content ID), and `poster`.
+3.  For `poster`, you can use any valid image URL.
+    -   **Remote URL:** `"poster": "https://example.com/poster.jpg"`
+    -   **Local File:**
+        1.  Create a folder named `static` in the project root.
+        2.  Place your image there (e.g., `my_poster.jpg`).
+        3.  Use the path: `"poster": "/static/my_poster.jpg"`
+4.  Restart the application (`sudo systemctl restart zmoviemagic` or restart the python script) to load the changes.
+
 ## Troubleshooting
 
 ### "device unauthorized" Error

@@ -240,8 +240,9 @@ def play(video_id):
         url = f"https://www.disneyplus.com/play/{video_id}?startTime=0"
         
         # input keyevent 224: WAKEUP
+        # input keyevent 3: HOME (Triggers HDMI-CEC Active Source to switch input)
         # am start ...: Launch activity
-        cmd = f'input keyevent 224 && am start -a android.intent.action.VIEW -d "{url}" com.disney.disneyplus'
+        cmd = f'input keyevent 224 && input keyevent 3 && am start -a android.intent.action.VIEW -d "{url}" com.disney.disneyplus'
         
         device.shell(cmd)
 
