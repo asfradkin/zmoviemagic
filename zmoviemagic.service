@@ -16,7 +16,7 @@ Environment="PATH=/home/afradkin/zmoviemagic/venv/bin:/usr/local/sbin:/usr/local
 
 # Command to start the application using gunicorn
 # Ensure 'gunicorn' is installed in your venv
-ExecStart=/home/afradkin/zmoviemagic/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 app:app
+ExecStart=/home/afradkin/zmoviemagic/venv/bin/gunicorn --workers 1 --threads 4 --bind 0.0.0.0:8000 app:app
 
 # Restart automatically if it crashes
 Restart=always
