@@ -37,3 +37,18 @@ def test_playback_enforces_cooldown(fake_firetv):
     with pytest.raises(CooldownError, match="Please wait 60 seconds"):
         playback.play("moana-id")
     assert fake_firetv.launched == ["luca-id"]
+
+
+def test_overlapping_play_is_rejected_and_lock_released(fake_firetv, monkeypatch):
+    playback = PlaybackService(fake_firetv, cooldown_seconds=0)
+
+    def launch(video_id):
+        with pytest.raises(CooldownError, match="busy"):
+            playback.play("moana-id")
+        raise RuntimeError("disconnected")
+
+    monkeypatch.setattr(fake_firetv, "launch_movie", launch)
+    with pytest.raises(RuntimeError, match="disconnected"):
+        playback.play("luca-id")
+    monkeypatch.setattr(fake_firetv, "launch_movie", lambda video_id: {"retried": False})
+    assert playback.play("luca-id")["status"] == "success"

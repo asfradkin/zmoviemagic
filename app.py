@@ -1,3 +1,4 @@
+import logging
 import os
 
 from flask import Flask, jsonify, render_template
@@ -9,6 +10,10 @@ from services.playback_service import CooldownError, PlaybackService
 
 
 def create_app(config=Config):
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    )
     app = Flask(__name__)
     app.config["SECRET_KEY"] = config.FLASK_SECRET_KEY
 
@@ -31,6 +36,7 @@ def create_app(config=Config):
         host=config.FIRE_TV_IP,
         port=config.FIRE_TV_PORT,
         disney_package=config.DISNEY_PACKAGE,
+        timeout_seconds=config.ADB_TIMEOUT_SECONDS,
     )
     playback_service = PlaybackService(
         firetv_service=firetv_service,
@@ -40,6 +46,13 @@ def create_app(config=Config):
     app.extensions["movie_service"] = movie_service
     app.extensions["firetv_service"] = firetv_service
     app.extensions["playback_service"] = playback_service
+
+    @app.get("/health")
+    def health():
+        """Report web-process health without contacting or waking the TV."""
+        response = jsonify({"status": "ok"})
+        response.headers["Cache-Control"] = "no-store"
+        return response
 
     @app.route("/")
     def index():

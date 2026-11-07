@@ -13,6 +13,7 @@ WorkingDirectory=/home/afradkin/zmoviemagic
 # Environment variables
 # Make sure .env exists in the WorkingDirectory
 Environment="PATH=/home/afradkin/zmoviemagic/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="HOME=/home/afradkin"
 
 # Command to start the application using gunicorn
 # Ensure 'gunicorn' is installed in your venv

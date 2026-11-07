@@ -15,9 +15,17 @@ My only mission is to make it easy for Zach and other kids like him to control a
    cp .env.example .env
    # Edit .env and add your values (do not commit .env)
    ```
-4. In `app.py` you can still adjust `MOVIE_NAMES`, `DISNEY_IDS`, and `POSTER_OVERRIDES`
+4. Edit `movies.json` to manage movie titles, Disney+ IDs, and posters.
 
 **Optional .env:** `FLASK_SECRET_KEY` (for production), `FLASK_DEBUG=1` (dev only), `PLAY_COOLDOWN_SECONDS` (default 2, min seconds between Play requests).
+
+`ADB_TIMEOUT_SECONDS` defaults to 5 and must be a finite positive number. It bounds
+ADB server startup and socket inactivity during connection and playback operations.
+It is not a total HTTP request deadline: connection setup and one reconnect attempt
+can each involve several socket operations. An overlapping play request returns
+HTTP 429 immediately instead of waiting behind the active launch. A timed-out shell
+command is not retried because it may already have reached the TV; a broken
+connection still gets one reconnect attempt.
 
 ## Installing on Ubuntu Server
 
@@ -63,7 +71,13 @@ python app.py
 
 ### Start on boot and restart on failure (systemd)
 
-1. Edit `zmoviemagic.service` in the project: set `User`, `WorkingDirectory`, and `ExecStart` to your username and full path to the project (e.g. `/home/andre/zmoviemagic`). The `ExecStart` line must point to your venv’s Python: `.../zmoviemagic/venv/bin/python app.py`.
+1. Edit `zmoviemagic.service` in the project: set `User`, `Group`, `WorkingDirectory`, `HOME`, `PATH`, and `ExecStart` for your server. `ExecStart` uses the venv's Gunicorn with **1 worker and 4 threads**. Keep one worker: the playback lock and cooldown are process-local.
+
+   Set `HOME` to the service user's actual home directory (currently
+   `/home/afradkin`). ADB must use the same authorized key at
+   `/home/afradkin/.android/adbkey` when running interactively and under systemd.
+   Preserve that key; generating a different one requires authorizing the server
+   again on the Fire TV.
 
 2. Install and enable the service:
 
@@ -75,6 +89,11 @@ sudo systemctl start zmoviemagic    # start now
 sudo systemctl status zmoviemagic   # check it’s running
 ```
 
+When updating an existing installation, copying the unit and running
+`daemon-reload` are required to apply unit changes such as `HOME`. Then run
+`sudo systemctl restart zmoviemagic`. The push deployment restarts the app but
+does not install an updated unit automatically.
+
 3. Useful commands:
 
 ```bash
@@ -83,11 +102,39 @@ sudo systemctl restart zmoviemagic  # restart
 journalctl -u zmoviemagic -f        # follow logs
 ```
 
-The service is set to `Restart=always` with `RestartSec=5`, so it will come back up after a crash or reboot.
+The service is set to `Restart=always`, so it will come back up after a crash or reboot.
 
-### Deploy pipeline (GitHub → server on push)
+### Reliability checks
 
-A GitHub Actions workflow (`.github/workflows/deploy.yml`) deploys to your Ubuntu server on every push to `main`: it SSHs in, updates the repo, and restarts the service.
+```bash
+# Check the web process without sending any commands to the TV
+curl --fail http://127.0.0.1:8000/health
+
+# Review launch attempts, reconnects, failures, and elapsed playback-command time
+journalctl -u zmoviemagic -n 100 --no-pager
+
+# Run automated tests in your development environment
+pip install -r requirements.txt -r requirements-test.txt
+python -m pytest -q
+```
+
+`/health` returns `{"status":"ok"}` with caching disabled. It reports only that
+the web process is responding; it does not verify Fire TV connectivity, Disney+
+playback, or catalog validity. Playback logs report command delivery rather than
+confirmation that the movie is playing onscreen.
+
+After deployment, check `/health`, then use the existing iPad movie grid to
+confirm playback and HDMI-CEC input switching on the TV. If playback fails only
+under systemd, check `systemctl show zmoviemagic -p User -p Environment` and verify
+that `HOME` and the authorized ADB key belong to the service user.
+
+### Optional deploy pipeline (GitHub → server on push)
+
+A GitHub Actions workflow can deploy to your Ubuntu server on every push to
+`main`: SSH in, update the repo, and restart the service. No workflow is currently
+committed in this repository; the setup below describes the requirements for
+configuring one. `deploy.sh` is included for server-side deployment and also
+updates Python dependencies before restarting the app.
 
 **One-time setup on the Ubuntu server**
 
@@ -117,10 +164,10 @@ A GitHub Actions workflow (`.github/workflows/deploy.yml`) deploys to your Ubunt
 
 3. On the server, the repo’s `origin` should be the GitHub URL (HTTPS or SSH). If you use SSH, the server’s SSH key must have access to the repo (e.g. add the server’s public key as a deploy key in GitHub).
 
-**What runs on push**
+**Expected workflow behavior once configured**
 
 - On every push to `main`, the workflow runs: SSH → `cd REPO_PATH` → `git fetch origin main` → `git reset --hard origin/main` → `sudo systemctl restart zmoviemagic`.
-- You can also run the workflow manually: **Actions** tab → **Deploy to server** → **Run workflow**.
+- If your workflow enables manual runs, use the **Actions** tab to run it.
 
 ## Fire TV
 

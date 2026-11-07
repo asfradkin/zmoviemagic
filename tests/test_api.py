@@ -59,3 +59,32 @@ def test_legacy_play_route_rejects_invalid_id(client):
     assert response.status_code == 400
     assert response.get_json()["message"] == "Invalid video ID"
     assert app.extensions["test_launched"] == []
+
+
+def test_health_does_not_contact_firetv(client, monkeypatch):
+    test_client, app = client
+
+    def unexpected_call(*args, **kwargs):
+        pytest.fail("Health check contacted Fire TV")
+
+    monkeypatch.setattr(app.extensions["firetv_service"], "get_device", unexpected_call)
+    response = test_client.get("/health")
+    assert response.status_code == 200
+    assert response.get_json() == {"status": "ok"}
+    assert response.headers["Cache-Control"] == "no-store"
+
+
+@pytest.mark.parametrize("error,code", [
+    (PermissionError("device unauthorized"), 403),
+    (RuntimeError("ADB operation timed out"), 500),
+])
+def test_playback_failures_remain_json(client, monkeypatch, error, code):
+    test_client, app = client
+
+    def launch(video_id):
+        raise error
+
+    monkeypatch.setattr(app.extensions["firetv_service"], "launch_movie", launch)
+    response = test_client.get("/play/luca-id")
+    assert response.status_code == code
+    assert response.get_json() == {"status": "error", "message": str(error)}
