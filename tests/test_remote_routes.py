@@ -100,6 +100,38 @@ def test_proxy_aggregate_is_independent_of_valid_principals(remote):
     assert http.get("/").status_code == 200
 
 
+def test_legacy_limiter_returns_429_and_shares_lan_api_quota(api_client):
+    http, app, calls = api_client
+    limiter = app.extensions["rate_limit_service"]
+    limiter.clock = lambda: 0
+    for _ in range(2):
+        assert http.get("/play/not-in-catalog").status_code == 200
+    response = http.get("/play/not-in-catalog")
+    assert response.status_code == 429 and response.headers["Retry-After"] == "2"
+    response = http.post("/api/play", json={"movie_key": "luca"}, headers={"Idempotency-Key": "request-one"})
+    assert response.status_code == 429
+    assert calls == []
+    assert app.extensions["test_launched"] == ["not-in-catalog", "not-in-catalog"]
+
+
+def test_auth_and_limiter_latency(remote, record_property):
+    from statistics import quantiles
+    from time import perf_counter
+    http, app, calls, headers = remote
+    now = [0]
+    app.extensions["rate_limit_service"].clock = lambda: now[0]
+    durations = []
+    for _ in range(50):
+        start = perf_counter()
+        assert http.get("/remote/api/status", headers=headers).status_code == 200
+        durations.append((perf_counter() - start) * 1000)
+        now[0] += 1
+    p95 = quantiles(durations, n=20)[18]
+    record_property("authenticated_status_p95_ms", p95)
+    print(f"\nauthenticated status p95={p95:.2f}ms (includes route/status/JSON)")
+    assert p95 < 20
+
+
 def test_remote_errors_do_not_leak_credentials_or_diagnostics(remote, monkeypatch, caplog):
     http, app, calls, headers = remote
     canary = "TEST_CANARY_NEVER_LOG_THIS"

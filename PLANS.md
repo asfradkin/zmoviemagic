@@ -6,8 +6,13 @@ See [the implementation/release runbook](docs/phase-2-runbook.md). Production
 rollout and target-device release gates remain pending. The user subsequently
 requested local Phase 3 implementation: P3.1–P3.3 and caregiver settings are now
 implemented; P3.4 target-device usability verification remains pending. See
-[tablet verification](docs/tablet-verification.md). Phase 4–6 remain specifications
-only; this document does not authorize deployment or production changes.
+[tablet verification](docs/tablet-verification.md). The user subsequently approved
+local P4.1–P4.3 implementation: authentication, LAN sessions/CSRF, bounded quotas,
+remote aliases and connectivity templates are implemented. Native proxy/tunnel
+validation and approved staging remain pending; see
+[Phase 4 verification](docs/phase-4-verification.md) and the
+[security runbook](docs/security-runbook.md). P4.4 and Phases 5–6 remain pending;
+this document does not authorize deployment or production changes.
 
 ## Baseline and roadmap
 

@@ -62,6 +62,35 @@ def test_duplicate_registry_and_missing_file_rejected(tmp_path):
         AuthService.load_registry(tmp_path / "absent")
 
 
+def test_security_startup_validation_precedes_catalog_side_effects(api_client, monkeypatch):
+    import app as module
+    import config
+    def unexpected(*args):
+        pytest.fail("Catalog work started before security validation")
+    monkeypatch.setattr(module.MovieService, "load", unexpected)
+    class Invalid(config.Config):
+        FLASK_SECRET_KEY = "dev-change-in-production"
+    with pytest.raises(ValueError, match="FLASK_SECRET_KEY"):
+        module.create_app(Invalid)
+    class MissingRegistry(config.Config):
+        REMOTE_API_ENABLED = True
+        API_TOKEN_FILE = ""
+    with pytest.raises(ValueError, match="registry"):
+        module.create_app(MissingRegistry)
+
+
+def test_debug_and_excessively_open_registry_rejected(tmp_path, monkeypatch):
+    import os
+    path, _ = registry(tmp_path)
+    monkeypatch.setenv("FLASK_DEBUG", "1")
+    with pytest.raises(ValueError, match="Debug"):
+        AuthService(SimpleNamespace(REMOTE_API_ENABLED=True, FLASK_SECRET_KEY="test-only-random-configuration-secret"))
+    if os.name != "nt":
+        path.chmod(0o644)
+        with pytest.raises(ValueError):
+            AuthService.load_registry(path)
+
+
 @pytest.mark.parametrize("authorization", [None, "Bearer invalid", "Basic secret", "Bearer unknown." + "A" * 43])
 def test_remote_uniform_401_and_forwarded_identity_is_not_auth(remote, authorization):
     http, app, calls, _ = remote

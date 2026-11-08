@@ -142,6 +142,7 @@ class AuthService:
         if not (valid and canonical and token and token["enabled"]):
             limiter.consume("failure", request.remote_addr or "unknown")
             raise APIError("authentication_required", 401, "Authentication required.")
+        limiter.consume("request", token["principal"])
         if scope not in token["scopes"]:
             raise APIError("forbidden", 403, "Credential lacks the required scope.")
         return token["principal"]

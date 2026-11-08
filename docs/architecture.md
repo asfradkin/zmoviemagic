@@ -5,7 +5,19 @@ Phase 2 is now locally implemented under separate user approval; see the
 [implementation/release runbook](phase-2-runbook.md) for current behavior and
 verification. The separately requested Phase 3 tablet client is locally
 implemented behind the same default-off flag; see [tablet verification](tablet-verification.md).
-Production and actual-iPad release gates remain pending. Phase 4–6 remain proposed.
+Production and actual-iPad release gates remain pending. Local Phase 4 auth,
+LAN sessions/CSRF, quotas and remote aliases are now implemented under separate
+approval; [verification](phase-4-verification.md) records remaining native
+proxy/tunnel and staging gates. Phases 5–6 remain proposed. Historical Phase 1
+limitations below describe the original baseline, not the current implementation.
+
+Current Phase 4 startup validates explicit LAN CIDRs/Host authorities and a
+non-default stable session secret before catalog work. Remote API is disabled by
+default; when enabled it additionally requires a protected token registry.
+Routes pass authenticated principals into the existing playback service; remote
+aliases share the same dispatcher. Local legacy routes remain trusted-LAN-only.
+Session HTML is private/no-store and browser commands include CSRF. See the
+[security runbook](security-runbook.md) before any approved deployment.
 
 ## Current system (Phase 1)
 

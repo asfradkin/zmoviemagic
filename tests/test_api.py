@@ -10,6 +10,7 @@ def client(movie_file, monkeypatch):
     monkeypatch.setenv("ALLOWED_HOSTS", "localhost,localhost:80,[::1]")
     monkeypatch.setenv("FLASK_SECRET_KEY", "test-only-session-key-0123456789abcdef")
     monkeypatch.setenv("REMOTE_API_ENABLED", "false")
+    monkeypatch.setenv("TABLET_API_ENABLED", "false")
     monkeypatch.setenv("API_TOKEN_FILE", "")
     monkeypatch.setenv("TMDB_API_KEY", "test-key")
     monkeypatch.setenv("MOVIES_FILE", str(movie_file))

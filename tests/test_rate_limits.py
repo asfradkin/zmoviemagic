@@ -21,7 +21,7 @@ def test_exact_burst_boundary(kind, burst, seconds):
     limiter.consume(kind, "one")
 
 
-@pytest.mark.parametrize("kind,count,step", [("command", 10, 3), ("request", 120, 0.5)])
+@pytest.mark.parametrize("kind,count,step", [("command", 10, 3), ("request", 120, 0.49)])
 def test_minute_window(kind, count, step):
     now = [0]
     limiter = RateLimitService(clock=lambda: now[0])

@@ -1,5 +1,11 @@
 # Phase 3 tablet implementation and verification
 
+Phase 4 follow-up: local security now requires explicit LAN/Host configuration,
+signed sessions and CSRF; all grid HTML is private/no-store and matched assets
+use version 4. The historical Phase 3 results and reproduction notes below remain
+as recorded. See [Phase 4 verification](phase-4-verification.md) for current
+automated results and the still-pending real iPad/Safari gates.
+
 Local implementation under the user's separate Phase 3 request, 2026-11-07.
 Production rollout and live-TV verification are not authorized by this work.
 

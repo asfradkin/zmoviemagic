@@ -125,8 +125,12 @@ def create_app(config=Config):
         if remote or "Authorization" in request.headers:
             g.principal = auth.bearer(scope, limiter)
         else:
-            g.principal = auth.browser(command=path == "/api/play")
-        limiter.consume("request", g.principal)
+            try:
+                g.principal = auth.browser(command=path == "/api/play")
+            except APIError:
+                limiter.consume("failure", request.remote_addr or "unknown")
+                raise
+            limiter.consume("request", g.principal)
         if remote and request.method not in ({"POST"} if path == "/api/play" else {"GET"}):
             raise APIError("method_not_allowed", 405, "Method not allowed.")
         if request.method in ("GET", "HEAD") and (request.content_length or request.environ.get("HTTP_TRANSFER_ENCODING")):
@@ -229,6 +233,8 @@ def create_app(config=Config):
             limiter.consume("request", "lan-household")
             result = playback_service.play(video_id, admit=lambda: limiter.consume("command", "lan-household"))
             return jsonify(result)
+        except APIError:
+            raise
         except ValueError as exc:
             return jsonify({"status": "error", "message": str(exc)}), 400
         except CooldownError as exc:

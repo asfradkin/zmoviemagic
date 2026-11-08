@@ -137,7 +137,7 @@ class PlaybackService:
             self._idempotency[scope] = {"movie_key": movie_key, "request_id": request_id, "response": response}
             self._active = request_id
             self._handoff.put_nowait((request_id, movie["id"]))
-            logger.info("Command accepted request_id=%s movie_key=%s action=play", request_id, movie_key)
+            logger.info("Command accepted principal=%s request_id=%s action=play", principal, request_id)
             return copy.deepcopy(response)
 
     def _run(self):
@@ -172,8 +172,8 @@ class PlaybackService:
                         self._device = {"connection": connection, "last_checked_at": self._utc()}
                     self._active = None
                 self._handoff.task_done()
-                logger.info("Command completed request_id=%s action=play state=%s code=%s elapsed=%.3fs",
-                            request_id, state, error["code"] if error else "none", self._clock() - started)
+                logger.info("Command completed principal=%s request_id=%s action=play state=%s code=%s elapsed=%.3fs",
+                            entry["principal"], request_id, state, error["code"] if error else "none", self._clock() - started)
 
     @staticmethod
     def _error_message(code):
@@ -231,7 +231,7 @@ class PlaybackService:
         finally:
             with self._lock:
                 self._active = None
-            logger.info("Legacy command attempt action=play elapsed=%.3fs", self._clock() - started)
+            logger.info("Legacy command attempt principal=lan-household action=play elapsed=%.3fs", self._clock() - started)
         message = f"Playing video {video_id}"
         if result.get("retried"):
             message += " (retried)"

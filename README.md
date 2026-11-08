@@ -11,13 +11,24 @@ My only mission is to make it easy for Zach and other kids like him to control a
 3. **Environment variables** – copy `.env.example` to `.env` and set:
    - `TMDB_API_KEY` – get a free key at [themoviedb.org](https://www.themoviedb.org/settings/api)
    - `FIRE_TV_IP` – your Fire TV’s IP address
+   - `FLASK_SECRET_KEY` – a stable cryptographically random secret, at least 32 characters
+   - `TRUSTED_LAN_CIDRS` – explicit trusted household IPv4/IPv6 networks or hosts
+   - `ALLOWED_HOSTS` – exact browser Host authorities, including the existing iPad port
    ```bash
    cp .env.example .env
    # Edit .env and add your values (do not commit .env)
    ```
 4. Edit `movies.json` to manage movie titles, Disney+ IDs, and posters.
 
-**Optional .env:** `FLASK_SECRET_KEY` (for production), `FLASK_DEBUG=1` (dev only), `PLAY_COOLDOWN_SECONDS` (default 2, min seconds between Play requests).
+**Optional .env:** `FLASK_DEBUG=1` (dev only), `PLAY_COOLDOWN_SECONDS` (default 2, min seconds between Play requests).
+
+Phase 4 validates the required security settings before startup, including with
+remote access disabled. Replace the example placeholders; retain the existing
+private iPad address/port in allowed Hosts. Remote access defaults off and needs
+separate edge protection plus scoped backend credentials. Review the
+[security runbook](docs/security-runbook.md) and
+[verification gates](docs/phase-4-verification.md) before any approved production
+change. Never publish the LAN UI/legacy routes or forward ADB/app ports to WAN.
 
 `ADB_TIMEOUT_SECONDS` defaults to 5 and must be a finite positive number. It bounds
 ADB server startup and socket inactivity during connection and playback operations.
@@ -46,9 +57,9 @@ pip install -r requirements.txt
 # 4. If pip install fails on pure-python-adb, try without version pin:
 #    pip install Flask pure-python-adb
 
-# 5. Create .env from the example and add your TMDB key and Fire TV IP
+# 5. Create .env and fill in API key, TV IP, random session key and LAN/Host settings
 cp .env.example .env
-# Edit .env (nano .env) and set TMDB_API_KEY and FIRE_TV_IP
+# Edit .env (nano .env); replace all required placeholders before startup
 
 # 6. Run the app
 python app.py
