@@ -49,10 +49,14 @@ async function fixture(options = {}) {
         throw new Error('Unexpected request: ' + request.url());
     });
     await page.goto('http://tablet.test/');
-    await page.locator('.favorite-button').first().waitFor();
+    await page.locator('.play-button:not([disabled])').first().waitFor();
     return { page, posts, gets, errors, async close() { assert.deepEqual(errors, []); await context.close(); } };
 }
 const play = (page, key = 'luca') => page.locator('[data-movie-key="' + key + '"]');
+async function refreshMovies(page) {
+    if (!await page.locator('#caregiver-settings').evaluate(el => el.open)) await page.locator('summary').click();
+    await page.locator('#refresh-catalog').click();
+}
 async function message(page, text) { await page.waitForFunction(text => document.getElementById('request-status').textContent.includes(text), text); }
 
 test('native keyboard activation, ten rapid taps, delivery, focus and recents', async () => {
@@ -73,19 +77,20 @@ test('native keyboard activation, ten rapid taps, delivery, focus and recents', 
     } finally { await f.close(); }
 });
 
-test('favorites, touch cancellation, scrolling and confirmation cancel never launch', async () => {
+test('simplified controls, touch cancellation, scrolling and confirmation cancel never launch', async () => {
     const f = await fixture();
     try {
-        await f.page.getByRole('button', { name: 'Favorite Luca', exact: true }).click();
-        await f.page.getByRole('button', { name: 'Favorites', exact: true }).click();
-        assert.equal(await play(f.page).count(), 1); assert.equal(await f.page.locator('.play-button').count(), 1);
+        assert.equal(await f.page.locator('.favorite-button, [data-section]').count(), 0);
+        assert.equal(await f.page.locator('.play-button').count(), 5);
+        assert.equal(await f.page.locator('#refresh-catalog').isVisible(), false);
+        assert.equal(await f.page.locator('#caregiver-settings #refresh-catalog').count(), 1);
         await play(f.page).dispatchEvent('touchcancel'); await play(f.page).dispatchEvent('touchstart');
         await f.page.evaluate(() => window.scrollBy(0, 200));
         await f.page.locator('summary').click(); await f.page.locator('#confirm-before-play').check();
         await play(f.page).click(); assert.equal(await f.page.locator('#cancel-confirmation').evaluate(el => el === document.activeElement), true);
         await f.page.locator('#cancel-confirmation').click(); assert.equal(f.posts.length, 0);
-        await f.page.reload(); await f.page.locator('.favorite-button').first().waitFor();
-        assert.equal(await f.page.locator('#section-title').innerText(), 'Favorites');
+        await f.page.reload(); await f.page.locator('.play-button:not([disabled])').first().waitFor();
+        assert.equal(await f.page.locator('#section-title').innerText(), 'All movies');
         await play(f.page).click(); await f.page.locator('#confirm-play').click(); await message(f.page, 'Request sent');
         assert.equal(f.posts.length, 1);
     } finally { await f.close(); }
@@ -123,9 +128,8 @@ test('denied storage and missing posters preserve launches and loaded grid on fa
     try {
         await f.page.waitForFunction(() => document.querySelector('[data-movie-key="moana"] img').getAttribute('src') === '/static/poster-fallback.svg');
         const img = play(f.page, 'moana').locator('img'); assert.equal(await img.evaluate(el => el.naturalWidth), 500);
-        await f.page.locator('#refresh-catalog').click(); await f.page.waitForFunction(() => document.querySelector('#connection-notice').textContent.includes('Could not refresh'));
+        await refreshMovies(f.page); await f.page.waitForFunction(() => document.querySelector('#connection-notice').textContent.includes('Could not refresh'));
         assert.equal(await f.page.locator('.play-button').count(), 5);
-        await f.page.getByRole('button', { name: 'Favorite Luca', exact: true }).click();
         await play(f.page).click(); await message(f.page, 'Request sent'); assert.equal(f.posts.length, 1);
         assert.match(await f.page.locator('#storage-notice').textContent(), /this visit/);
     } finally { await f.close(); }
@@ -229,24 +233,23 @@ test('20-second delayed response leaves uncertainty, ignores late acceptance and
     } finally { if (release) release(); await f.close(); }
 });
 
-test('catalog removal/reappearance keeps preferences, favorites stay in catalog order, reset is explicit', async () => {
+test('saved preferences never filter the full catalog, refresh preserves them and reset is explicit', async () => {
     let rows = [{ key: 'moana', title: 'Moana', available: true, poster: '/static/poster-fallback.svg' },
         { key: 'luca', title: 'Luca', available: true, poster: '/static/poster-fallback.svg' }];
     const f = await fixture({ init: () => {
         localStorage.setItem('zmm.tablet.v1', JSON.stringify({ version: 1, favorite_keys: ['luca', 'moana', 'removed'], settings: { confirm_before_play: false }, recent_requests: [] }));
     }, catalog: route => route.fulfill({ json: { schema_version: 2, movies: rows } }) });
     try {
-        assert.deepEqual(await f.page.locator('.play-button').evaluateAll(els => els.map(el => el.dataset.movieKey)), ['luca', 'moana']);
-        await f.page.locator('#refresh-catalog').click();
+        assert.equal(await f.page.locator('.play-button').count(), 5);
+        await refreshMovies(f.page);
         await f.page.waitForFunction(() => document.querySelector('.play-button').dataset.movieKey === 'moana');
         assert.deepEqual(await f.page.locator('.play-button').evaluateAll(els => els.map(el => el.dataset.movieKey)), ['moana', 'luca']);
-        rows = []; await f.page.locator('#refresh-catalog').click(); await f.page.waitForFunction(() => !document.querySelector('.play-button'));
+        rows = []; await refreshMovies(f.page); await f.page.waitForFunction(() => !document.querySelector('.play-button'));
         assert.equal(await f.page.evaluate(() => JSON.parse(localStorage.getItem('zmm.tablet.v1')).favorite_keys.length), 3);
         rows = [{ key: 'removed', title: 'Back again', available: true, poster: '/static/poster-fallback.svg' }];
-        await f.page.locator('#refresh-catalog').click(); await play(f.page, 'removed').waitFor();
-        await f.page.getByRole('button', { name: 'Favorites', exact: true }).click();
+        await refreshMovies(f.page); await play(f.page, 'removed').waitFor();
         assert.equal(await f.page.locator('.play-button').count(), 1);
-        await f.page.locator('summary').click(); await f.page.locator('#reset-preferences').click();
+        await f.page.locator('#reset-preferences').click();
         await f.page.locator('#cancel-confirmation').click();
         assert.equal(await f.page.evaluate(() => JSON.parse(localStorage.getItem('zmm.tablet.v1')).favorite_keys.length), 3);
         await f.page.locator('#reset-preferences').click(); await f.page.locator('#confirm-play').click();

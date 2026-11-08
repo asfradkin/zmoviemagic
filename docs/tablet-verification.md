@@ -1,5 +1,25 @@
 # Phase 3 tablet implementation and verification
 
+## Requested UI simplification
+
+The subsequent user-requested revision moves Refresh movies into the collapsed
+Caregiver settings panel, removes section navigation and each movie's favorite
+button, and always displays the full catalog in its original order. Existing
+stored favorites/recent data is preserved but never filters the grid. Confirmation,
+request feedback, recovery, CSRF and the legacy grid remain unchanged. Matching
+CSS/JS URLs now use version 5. These changes supersede the historical navigation
+and favorite-control descriptions below.
+
+Observed local verification: **202 Python tests passed, 1 skipped in 9.23s**;
+**33 JavaScript/browser tests passed** (19 unit and 14 browser scenarios).
+The browser fixtures verify the absence of favorite/section buttons, Refresh
+movies hidden until settings opens, read-only refresh, complete catalog despite
+saved preferences, confirmation cancel, launch/recovery and CSRF behavior.
+Existing accessibility/layout checks passed at 768x1024, 1024x768, 384x512 and
+320x600, including keyboard, touch, contrast, focus and 200% text enlargement.
+The updated 768px portrait screenshot was visually inspected. Real iPad/Safari
+checks remain pending. No deployment or service restart was performed.
+
 Phase 4 follow-up: local security now requires explicit LAN/Host configuration,
 signed sessions and CSRF; all grid HTML is private/no-store and matched assets
 use version 4. The historical Phase 3 results and reproduction notes below remain

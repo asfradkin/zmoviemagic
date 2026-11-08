@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token|default('') }}">
     <title>Zach's Movie Magic</title>
     {% if tablet_api_enabled %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='tablet.css', v='4') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='tablet.css', v='5') }}">
     {% else %}
     <style>
         body {
@@ -151,16 +151,10 @@
             <div class="actions">
                 <button id="check-request" type="button" hidden>Check request</button>
                 <button id="try-again" type="button" hidden>Try again</button>
-                <button id="refresh-catalog" type="button">Refresh movies</button>
             </div>
             <p id="connection-notice" role="status" aria-live="polite"></p>
         </section>
         <noscript>Enable JavaScript to request a movie. No movie has been requested. Ask a caregiver for help.</noscript>
-        <nav aria-label="Movie sections" class="actions">
-            <button type="button" data-section="favorites" hidden>Favorites</button>
-            <button type="button" data-section="recent" hidden>Recent requests</button>
-            <button type="button" data-section="all" aria-pressed="true">All movies</button>
-        </nav>
         <section id="confirmation" class="panel" aria-labelledby="confirmation-title" hidden>
             <h2 id="confirmation-title" tabindex="-1"></h2>
             <p id="confirmation-message"></p>
@@ -180,14 +174,15 @@
         </div>
         <details class="panel" id="caregiver-settings">
             <summary>Caregiver settings</summary>
-            <p>Favorites and recent requests are saved only in this browser.</p>
+            <div class="actions"><button id="refresh-catalog" type="button">Refresh movies</button></div>
+            <p>Preferences are saved only in this browser.</p>
             <label class="setting"><input id="confirm-before-play" type="checkbox"> Confirm before playing</label>
             <p id="storage-notice" role="status" aria-live="polite"></p>
             <button id="reset-preferences" type="button">Reset local preferences</button>
         </details>
         <script id="initial-catalog" type="application/json">{{ movies|tojson }}</script>
     </main>
-    <script src="{{ url_for('static', filename='tablet.js', v='4') }}" defer></script>
+    <script src="{{ url_for('static', filename='tablet.js', v='5') }}" defer></script>
     {% else %}
     <h1>Zach's Movie Magic -- Now Showing</h1>
 

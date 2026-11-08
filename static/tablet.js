@@ -185,7 +185,7 @@
         var doc = global.document, status = doc.getElementById('request-status');
         if (!status) { return; }
         if (!global.fetch || !global.Promise) { status.textContent = 'This browser needs an update. Please ask a caregiver.'; return; }
-        var grid = doc.getElementById('movie-grid'), section = 'all', selected = null, busy = false, confirmation = null, refreshActive = false;
+        var grid = doc.getElementById('movie-grid'), selected = null, busy = false, confirmation = null, refreshActive = false;
         var movies = [], sequence = 0;
         var prefs = createPreferences({
             read: function () { return global.localStorage.getItem('zmm.tablet.v1'); },
@@ -228,20 +228,10 @@
             else { controller.play(movie.key, movie.title); }
         }
         function render() {
-            var preferences = prefs.get(), favorites = preferences.favorite_keys;
-            var favoriteMovies = movies.filter(function (movie) { return favorites.indexOf(movie.key) >= 0; });
-            var recentMovies = preferences.recent_requests.map(function (entry) { return find(entry.movie_key); }).filter(Boolean);
-            if ((section === 'favorites' && !favoriteMovies.length) || (section === 'recent' && !recentMovies.length)) { section = 'all'; }
-            var visible = section === 'favorites' ? favoriteMovies : section === 'recent' ? recentMovies : movies;
-            var nav = doc.querySelectorAll('[data-section]');
-            for (var n = 0; n < nav.length; n += 1) {
-                var name = nav[n].getAttribute('data-section');
-                nav[n].hidden = (name === 'favorites' && !favoriteMovies.length) || (name === 'recent' && !recentMovies.length); nav[n].setAttribute('aria-pressed', String(name === section));
-            }
-            doc.getElementById('section-title').textContent = section === 'favorites' ? 'Favorites' : section === 'recent' ? 'Recent requests' : 'All movies';
+            var preferences = prefs.get();
             var focused = doc.activeElement, focusKey = focused && focused.getAttribute('data-focus-key');
             while (grid.firstChild) { grid.removeChild(grid.firstChild); }
-            visible.forEach(function (movie) {
+            movies.forEach(function (movie) {
                 var card = el('article', null, 'movie-card' + (selected && selected.key === movie.key ? ' selected' : ''));
                 var play = el('button', null, 'play-button'); play.type = 'button';
                 play.setAttribute('data-movie-key', movie.key); play.setAttribute('data-available', String(movie.available)); play.setAttribute('data-focus-key', 'play-' + movie.key);
@@ -251,10 +241,7 @@
                 play.appendChild(image); play.appendChild(el('span', movie.title, 'movie-title'));
                 if (!movie.available) { play.appendChild(el('span', 'Unavailable', 'movie-title')); }
                 play.addEventListener('click', function () { choose(movie, play); });
-                var favorite = el('button', favorites.indexOf(movie.key) >= 0 ? '★ Favorite' : '☆ Favorite', 'favorite-button'); favorite.type = 'button';
-                favorite.setAttribute('data-focus-key', 'favorite-' + movie.key); favorite.setAttribute('aria-label', 'Favorite ' + movie.title); favorite.setAttribute('aria-pressed', String(favorites.indexOf(movie.key) >= 0));
-                favorite.addEventListener('click', function () { prefs.toggle(movie.key); render(); });
-                card.appendChild(play); card.appendChild(favorite); grid.appendChild(card);
+                card.appendChild(play); grid.appendChild(card);
             });
             if (focusKey) {
                 var candidates = grid.querySelectorAll('[data-focus-key]'), restored = false;
@@ -302,12 +289,7 @@
         });
         try { movies = sanitizeCatalog(JSON.parse(doc.getElementById('initial-catalog').textContent)); }
         catch (error) { status.textContent = 'The movie catalog could not be read. Use Refresh movies or ask a caregiver.'; }
-        var initial = prefs.get();
-        if (movies.some(function (movie) { return initial.favorite_keys.indexOf(movie.key) >= 0; })) { section = 'favorites'; }
-        else if (initial.recent_requests.some(function (entry) { return !!find(entry.movie_key); })) { section = 'recent'; }
         render();
-        var navigation = doc.querySelectorAll('[data-section]');
-        for (var i = 0; i < navigation.length; i += 1) { navigation[i].addEventListener('click', function () { section = this.getAttribute('data-section'); render(); }); }
         doc.getElementById('cancel-confirmation').addEventListener('click', closeConfirmation);
         doc.getElementById('confirm-play').addEventListener('click', function () {
             if (!confirmation) { return; } var choice = confirmation; closeConfirmation();

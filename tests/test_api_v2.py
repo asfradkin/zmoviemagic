@@ -208,7 +208,9 @@ def test_tablet_assets_settings_and_escaped_initial_catalog(api_client):
     assert '</script><img src=x' not in html
     assert 'id="confirm-before-play"' in html
     assert 'id="check-request"' in html
-    assert 'tablet.css?v=4' in html and 'tablet.js?v=4' in html
+    assert 'tablet.css?v=5' in html and 'tablet.js?v=5' in html
+    assert html.index('id="caregiver-settings"') < html.index('id="refresh-catalog"')
+    assert 'data-section=' not in html
     assert 'id="toast"' not in html
     assert 'luca-id' not in html
     for asset in ("tablet.css", "tablet.js", "poster-fallback.svg"):

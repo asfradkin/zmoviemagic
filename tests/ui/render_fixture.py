@@ -6,7 +6,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 root = Path(__file__).resolve().parents[2]
 environment = Environment(loader=FileSystemLoader(root / "templates"), autoescape=select_autoescape())
-environment.globals["url_for"] = lambda endpoint, filename, **kw: "/static/" + filename + "?v=4"
+environment.globals["url_for"] = lambda endpoint, filename, **kw: "/static/" + filename + "?v=" + kw.get("v", "5")
 movies = [
     {"key": "luca", "title": "Luca", "poster": "/static/poster-fallback.svg", "available": True},
     {"key": "moana", "title": "Moana", "poster": "https://posters.invalid/missing.jpg", "available": True},
