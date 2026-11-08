@@ -38,11 +38,11 @@ def dispatcher(tmp_path):
     service.shutdown()
 
 
-def terminal(service, request_id):
+def terminal(service, request_id, principal="lan-household"):
     # Bounded synchronization wait, never a real device operation.
     deadline = time.monotonic() + 3
     while time.monotonic() < deadline:
-        record = service.status(request_id)["request"]
+        record = service.status(request_id, principal)["request"]
         if record["command_state"] not in ("queued", "dispatching"):
             return record
         time.sleep(0.001)

@@ -8,6 +8,12 @@ venv/
 .venv/
 env/
 .env
+.env.*
+!.env.example
+api-tokens*.json
+tunnel-credentials*.json
+adbkey
+adbkey.pub
 # Operator-created catalog rollback copies stay local.
 movies.json.backup-*
 .playwright_user_data/

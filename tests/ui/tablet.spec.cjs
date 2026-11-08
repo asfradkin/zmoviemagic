@@ -31,7 +31,7 @@ async function fixture(options = {}) {
             return route.fulfill({ contentType: filename.endsWith('.js') ? 'text/javascript' : filename.endsWith('.css') ? 'text/css' : 'image/svg+xml', body: fs.readFileSync(path.join(root, 'static', filename)) });
         }
         if (url.pathname === '/api/play') {
-            posts.push({ body: request.postDataJSON(), key: request.headers()['idempotency-key'] });
+            posts.push({ body: request.postDataJSON(), key: request.headers()['idempotency-key'], csrf: request.headers()['x-csrf-token'] });
             if (options.post) return options.post(route, posts);
             return route.fulfill({ status: 202, json: { request_id: requestId, movie_key: request.postDataJSON().movie_key,
                 command_state: 'queued', playback: { state: 'unknown' }, status_url: 'https://evil.invalid/api/status' } });
@@ -62,6 +62,7 @@ test('native keyboard activation, ten rapid taps, delivery, focus and recents', 
         await f.page.evaluate(() => { for (let i = 0; i < 10; i++) document.querySelector('[data-movie-key="luca"]').click(); });
         await message(f.page, 'Request sent');
         assert.equal(f.posts.length, 1); assert.equal(f.posts[0].body.movie_key, 'luca');
+        assert.equal(f.posts[0].csrf, 'synthetic-csrf-token');
         assert.equal(await play(f.page).evaluate(el => el === document.activeElement), true);
         const prefs = await f.page.evaluate(() => JSON.parse(localStorage.getItem('zmm.tablet.v1')));
         assert.equal(prefs.recent_requests[0].movie_key, 'luca');

@@ -112,6 +112,7 @@
             pending = { movie_key: key, title: title || key, idempotency_key: idempotencyKey, accepted_at: options.now() }; remember();
             var postOptions = { method: 'POST', credentials: 'same-origin', cache: 'no-store',
                 headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey }, body: JSON.stringify({ movie_key: key }) };
+            if (options.csrfToken) { postOptions.headers['X-CSRF-Token'] = options.csrfToken; }
             if (abort) { postOptions.signal = abort.signal; }
             options.fetch('/api/play', postOptions).then(readJSON).then(function (result) {
                 if (finished) { return; }
@@ -126,7 +127,7 @@
                         finish('This movie is unavailable. Refresh movies to check the catalog.', 'failed', true);
                         if (options.onUnavailable) { options.onUnavailable(); }
                     } else if (result.status === 401 || result.status === 403) {
-                        finish('Your connection needs refreshing. Use Refresh movies or ask a caregiver. No automatic retry will be sent.', 'failed', true);
+                        finish('Your connection needs refreshing. Reload this page or ask a caregiver. No automatic retry will be sent.', 'failed', true);
                     } else if ((result.status >= 400 && result.status < 500) || result.status === 503) {
                         finish('The movie request was not accepted. Check the connection and try again.', 'failed', true);
                     } else { finish(uncertain, 'unknown'); }
@@ -280,6 +281,7 @@
             }).catch(function () { complete('Could not refresh movies. Your loaded movies and preferences are still here.'); });
         }
         var controller = createController({
+            csrfToken: (doc.querySelector('meta[name="csrf-token"]') || {}).content || '',
             fetch: global.fetch.bind(global), now: Date.now, setTimeout: global.setTimeout.bind(global), clearTimeout: global.clearTimeout.bind(global),
             makeAbortController: global.AbortController ? function () { return new global.AbortController(); } : null,
             makeKey: function () {

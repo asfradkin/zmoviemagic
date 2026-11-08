@@ -126,7 +126,7 @@ def test_cross_site_api_requests_denied(api_client, headers):
 def test_same_origin_is_accepted_and_forwarded_headers_do_not_grant_access(api_client):
     http, app, calls = api_client
     response = http.post("/api/play", json={"movie_key": "luca"},
-                         headers={"Origin": "http://localhost:80", "Idempotency-Key": "request-001"})
+                         headers={"Origin": "http://localhost", "Idempotency-Key": "request-001"})
     assert response.status_code == 202
     response = http.get("/api/status", headers={"Origin": "https://evil.example", "X-Forwarded-Host": "evil.example"})
     assert response.status_code == 403
@@ -180,10 +180,10 @@ def test_flag_off_legacy_and_flag_on_private_html(api_client):
     http, app, calls = api_client
     legacy = http.get("/")
     assert "luca-id" in legacy.get_data(as_text=True)
-    assert legacy.headers["Cache-Control"] == "public, max-age=300"
+    assert legacy.headers["Cache-Control"] == "private, no-store"
     app.config["TABLET_API_ENABLED"] = True
     modern = http.get("/")
-    assert modern.headers["Cache-Control"] == "no-cache"
+    assert modern.headers["Cache-Control"] == "private, no-store"
     assert "luca-id" not in modern.get_data(as_text=True)
     assert "moana-id" not in modern.get_data(as_text=True)
     html = modern.get_data(as_text=True)
@@ -208,7 +208,7 @@ def test_tablet_assets_settings_and_escaped_initial_catalog(api_client):
     assert '</script><img src=x' not in html
     assert 'id="confirm-before-play"' in html
     assert 'id="check-request"' in html
-    assert 'tablet.css?v=3' in html and 'tablet.js?v=3' in html
+    assert 'tablet.css?v=4' in html and 'tablet.js?v=4' in html
     assert 'id="toast"' not in html
     assert 'luca-id' not in html
     for asset in ("tablet.css", "tablet.js", "poster-fallback.svg"):
@@ -244,8 +244,10 @@ def test_job_cap_and_stopped_dispatcher_return_unadmitted_503(api_client):
     assert post(http, "moana", "request-003").status_code == 503
 
 
-def test_admission_and_status_p95_with_100_rows(api_client, record_property):
+def test_admission_and_status_p95_with_100_rows(api_client, record_property, monkeypatch):
     http, app, calls = api_client
+    # This benchmark measures dispatcher latency; limiter boundaries have separate tests.
+    monkeypatch.setattr(app.extensions["rate_limit_service"], "consume", lambda *args: None)
     movies = app.extensions["movie_service"]
     movies._movies = [{"key": f"movie-{i}", "title": f"Movie {i}", "id": f"private-{i}", "aliases": []}
                       for i in range(100)]

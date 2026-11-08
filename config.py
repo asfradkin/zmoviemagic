@@ -11,6 +11,13 @@ load_dotenv(BASE_DIR / ".env")
 
 
 class Config:
+    REMOTE_API_ENABLED = os.environ.get("REMOTE_API_ENABLED", "false").lower() in ("1", "true", "yes")
+    API_TOKEN_FILE = os.environ.get("API_TOKEN_FILE", "").strip()
+    TRUSTED_LAN_CIDRS = tuple(value.strip() for value in os.environ.get("TRUSTED_LAN_CIDRS", "").split(",") if value.strip())
+    ALLOWED_HOSTS = tuple(value.strip() for value in os.environ.get("ALLOWED_HOSTS", "").split(",") if value.strip())
+    SESSION_LIFETIME_SECONDS = int(os.environ.get("SESSION_LIFETIME_SECONDS", "43200"))
+    RATE_LIMIT_MAX_BUCKETS = int(os.environ.get("RATE_LIMIT_MAX_BUCKETS", "1024"))
+    RATE_LIMIT_IDLE_SECONDS = int(os.environ.get("RATE_LIMIT_IDLE_SECONDS", "900"))
     FIRE_TV_IP = os.environ.get("FIRE_TV_IP", "").strip()
     FIRE_TV_PORT = int(os.environ.get("FIRE_TV_PORT", "5555"))
     ADB_TIMEOUT_SECONDS = float(os.environ.get("ADB_TIMEOUT_SECONDS", "5"))

@@ -6,6 +6,11 @@ import pytest
 
 @pytest.fixture
 def client(movie_file, monkeypatch):
+    monkeypatch.setenv("TRUSTED_LAN_CIDRS", "127.0.0.1/32,::1/128")
+    monkeypatch.setenv("ALLOWED_HOSTS", "localhost,localhost:80,[::1]")
+    monkeypatch.setenv("FLASK_SECRET_KEY", "test-only-session-key-0123456789abcdef")
+    monkeypatch.setenv("REMOTE_API_ENABLED", "false")
+    monkeypatch.setenv("API_TOKEN_FILE", "")
     monkeypatch.setenv("TMDB_API_KEY", "test-key")
     monkeypatch.setenv("MOVIES_FILE", str(movie_file))
     monkeypatch.setenv("PLAY_COOLDOWN_SECONDS", "0")
@@ -26,7 +31,11 @@ def client(movie_file, monkeypatch):
         app.extensions["firetv_service"], "launch_movie", launch_movie
     )
     app.extensions["test_launched"] = launched
-    return app.test_client(), app
+    http = app.test_client()
+    http.get("/")
+    with http.session_transaction() as session:
+        http.environ_base["HTTP_X_CSRF_TOKEN"] = session["csrf"]
+    return http, app
 
 
 def test_legacy_play_route_returns_existing_response(client):

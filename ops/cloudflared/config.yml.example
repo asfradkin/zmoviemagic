@@ -1,0 +1,9 @@
+# Named, locally managed tunnel. Never use a public quick tunnel.
+# Access Service Auth policy is separate and MUST exist before publication.
+tunnel: TUNNEL_UUID
+credentials-file: /etc/cloudflared/TUNNEL_UUID.json
+ingress:
+  - hostname: movies-api.example.net
+    path: ^/api/(movies|play|status)$
+    service: http://127.0.0.1:8081
+  - service: http_status:404

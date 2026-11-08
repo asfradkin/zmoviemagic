@@ -101,7 +101,7 @@ class PlaybackService:
         except Exception:
             raise APIError("dispatcher_unavailable", 503, "Command dispatcher is unavailable.") from None
 
-    def submit_play(self, movie_key, principal, idempotency_key):
+    def submit_play(self, movie_key, principal, idempotency_key, admit=None):
         if not valid_key(movie_key):
             raise APIError("invalid_movie_key", 400, "A valid movie key is required.")
         if not isinstance(idempotency_key, str) or not self.IDEMPOTENCY_PATTERN.fullmatch(idempotency_key):
@@ -124,6 +124,8 @@ class PlaybackService:
             self._check_admission()
             if len(self._jobs) >= self.max_records or len(self._idempotency) >= self.max_records:
                 raise APIError("dispatcher_unavailable", 503, "Request history is full; try again after records expire.")
+            if admit is not None:
+                admit()
             self._ensure_worker()
             request_id = str(uuid4())
             response = {"request_id": request_id, "movie_key": movie_key, "command_state": "queued",
@@ -207,7 +209,7 @@ class PlaybackService:
         with self._lock:
             return dict(self._legacy_counts)
 
-    def play(self, video_id):
+    def play(self, video_id, admit=None):
         if not valid_id(video_id):
             raise ValueError("Invalid video ID")
         with self._lock:
@@ -218,6 +220,8 @@ class PlaybackService:
                 if exc.code == "cooldown":
                     raise CooldownError(f"Please wait {self.cooldown_seconds:g} seconds between plays.") from None
                 raise CooldownError("Playback is busy. Please try again shortly.") from None
+            if admit is not None:
+                admit()
             self._active = "legacy"
             self._last_play_time = self._clock()
             self._legacy_counts["accepted"] += 1

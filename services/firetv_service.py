@@ -218,7 +218,7 @@ class FireTVService:
                     return None, f"Could not connect to {self.host}:{self.port}"
                 return self._device, None
             except Exception as exc:
-                logger.warning("ADB connection failed: %s", exc)
+                logger.warning("ADB connection failed (%s)", type(exc).__name__)
                 return None, str(exc)
 
     @staticmethod
@@ -267,7 +267,7 @@ class FireTVService:
             if isinstance(exc, TimeoutError) or "unauthorized" in str(exc).lower():
                 # A timed-out launch may already have run; do not launch it twice.
                 self._raise_failure(exc)
-            logger.warning("ADB command failed; reconnecting once: %s", exc)
+            logger.warning("ADB command failed; reconnecting once (%s)", type(exc).__name__)
             device, reconnect_error = self.get_device(force_reconnect=True)
             if device:
                 try:
