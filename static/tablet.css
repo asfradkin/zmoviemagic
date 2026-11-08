@@ -1,0 +1,31 @@
+:root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #161b28; color: #f8fafc; }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 20px; }
+header, main { max-width: 1100px; margin: 0 auto; }
+header { margin-bottom: 24px; }
+h1 { font-size: 2rem; margin: 0 0 8px; }
+h2 { font-size: 1.5rem; }
+p { line-height: 1.5; }
+button, summary, .setting { min-width: 56px; min-height: 56px; }
+button, summary { font: inherit; font-weight: 600; color: #f8fafc; background: #29364e; border: 2px solid #9aacc8; border-radius: 12px; padding: 14px 18px; cursor: pointer; touch-action: manipulation; }
+button[aria-pressed="true"] { background: #d9eaff; color: #14243c; border-color: #d9eaff; }
+button[aria-disabled="true"], button:disabled { color: #cbd5e1; background: #273043; cursor: default; }
+button:focus, summary:focus, input:focus, [tabindex="-1"]:focus { outline: 4px solid #ffdf80; outline-offset: 4px; }
+[hidden] { display: none !important; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0; }
+.status-panel, .panel { padding: 20px; border: 2px solid #7186a8; border-radius: 16px; background: #202a3d; margin: 20px 0; }
+#request-status { font-size: 1.15rem; font-weight: 600; margin-top: 0; }
+#selection:empty, #connection-notice:empty, #storage-notice:empty, #catalog-notice:empty { display: none; }
+.movie-grid { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 20px; }
+.movie-card { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.play-button { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; padding: 0; overflow: hidden; width: 100%; flex: 1; text-align: left; background: #202a3d; }
+.play-button img { display: block; width: 100%; height: auto; aspect-ratio: 2 / 3; object-fit: cover; background: #333; }
+.movie-title { display: block; padding: 14px 12px; line-height: 1.4; overflow-wrap: anywhere; }
+.favorite-button { width: 100%; }
+.selected .play-button { border-color: #ffdf80; }
+.setting { display: flex; align-items: center; gap: 16px; margin: 16px 0; padding: 12px; border: 2px solid #9aacc8; border-radius: 12px; cursor: pointer; }
+.setting input { width: 56px; height: 56px; flex-shrink: 0; }
+summary { display: list-item; }
+@media (max-width: 699px) { .movie-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 359px) { .movie-grid { grid-template-columns: minmax(0, 1fr); } body { padding: 16px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

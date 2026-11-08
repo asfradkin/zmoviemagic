@@ -1,6 +1,9 @@
 # Phase 3 — Accessible tablet interface
 
-Status: implementation specification. Backlog P3.1–P3.4.
+Status: local P3.1–P3.3 implementation and caregiver settings completed under the
+user's separate Phase 3 request. P3.4 physical-device/usability and production
+release gates remain pending; see [verification](../tablet-verification.md).
+Backlog P3.1–P3.4.
 Depends on [Phase 2](02-playback-api.md); shared state follows in Phase 6.
 
 ## 1. Objective and user-facing outcomes
@@ -9,7 +12,7 @@ Let Zach choose a familiar movie from recognizable large pictures with one
 deliberate activation. Keep feedback understandable, favorites easy to reach,
 and recovery possible without a remote, page reload or technical knowledge.
 
-## 2. Current-state analysis
+## 2. Historical baseline analysis
 
 The current Jinja grid uses 85px minimum poster columns, small ellipsized titles,
 clickable divs, hover transforms and a three-second toast. It announces "Playing"

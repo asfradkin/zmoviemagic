@@ -197,6 +197,29 @@ def test_flag_off_legacy_and_flag_on_private_html(api_client):
     assert "/play/" not in broken
 
 
+def test_tablet_assets_settings_and_escaped_initial_catalog(api_client):
+    http, app, calls = api_client
+    app.config["TABLET_API_ENABLED"] = True
+    movies = app.extensions["movie_service"]
+    movies._movies[0]["title"] = '</script><img src=x onerror="alert(1)">'
+    movies._validate()
+    html = http.get("/").get_data(as_text=True)
+    assert '<script id="initial-catalog" type="application/json">' in html
+    assert '</script><img src=x' not in html
+    assert 'id="confirm-before-play"' in html
+    assert 'id="check-request"' in html
+    assert 'tablet.css?v=3' in html and 'tablet.js?v=3' in html
+    assert 'id="toast"' not in html
+    assert 'luca-id' not in html
+    for asset in ("tablet.css", "tablet.js", "poster-fallback.svg"):
+        assert http.get("/static/" + asset).status_code == 200
+    app.config["TABLET_API_ENABLED"] = False
+    legacy = http.get("/").get_data(as_text=True)
+    assert 'id="toast"' in legacy
+    assert 'tablet.css' not in legacy and 'tablet.js' not in legacy
+    assert calls == []
+
+
 @pytest.mark.parametrize("path", ["/api/movies?unexpected=true", "/api/status?unexpected=true",
                                    "/api/status?request_id=a&request_id=b", "/api/status?request_id="])
 def test_query_fields_are_strict(api_client, path):

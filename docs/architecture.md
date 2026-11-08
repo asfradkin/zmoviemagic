@@ -3,7 +3,9 @@
 Inspected 2026-11-07. The Phase 1 section below records the original baseline.
 Phase 2 is now locally implemented under separate user approval; see the
 [implementation/release runbook](phase-2-runbook.md) for current behavior and
-verification. Production release gates remain pending. Phase 3–6 remain proposed.
+verification. The separately requested Phase 3 tablet client is locally
+implemented behind the same default-off flag; see [tablet verification](tablet-verification.md).
+Production and actual-iPad release gates remain pending. Phase 4–6 remain proposed.
 
 ## Current system (Phase 1)
 

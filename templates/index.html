@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zach's Movie Magic</title>
+    {% if tablet_api_enabled %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='tablet.css', v='3') }}">
+    {% else %}
     <style>
         body {
             background-color: #1a1a1a;
@@ -133,41 +136,71 @@
             }
         }
     </style>
+    {% endif %}
 </head>
 
 <body>
 
-    <h1>Zach's Movie Magic -- Now Showing</h1>
-
     {% if tablet_api_enabled %}
-    <p id="request-status" role="status" aria-live="polite" aria-atomic="true">Choose a movie to request it on Fire TV.</p>
-    <noscript>Enable JavaScript to request a movie. No movie has been requested.</noscript>
-    {% if not movies %}<p>The movie catalog is unavailable. Please ask a caregiver.</p>{% endif %}
-    {% endif %}
+    <header><h1>Zach's Movie Magic</h1><p>Choose a movie for Fire TV</p></header>
+    <main id="tablet">
+        <section class="status-panel" aria-label="Movie request">
+            <p id="request-status" role="status" aria-live="polite" aria-atomic="true">Choose a movie to request it on Fire TV.</p>
+            <p id="selection"></p>
+            <div class="actions">
+                <button id="check-request" type="button" hidden>Check request</button>
+                <button id="try-again" type="button" hidden>Try again</button>
+                <button id="refresh-catalog" type="button">Refresh movies</button>
+            </div>
+            <p id="connection-notice" role="status" aria-live="polite"></p>
+        </section>
+        <noscript>Enable JavaScript to request a movie. No movie has been requested. Ask a caregiver for help.</noscript>
+        <nav aria-label="Movie sections" class="actions">
+            <button type="button" data-section="favorites" hidden>Favorites</button>
+            <button type="button" data-section="recent" hidden>Recent requests</button>
+            <button type="button" data-section="all" aria-pressed="true">All movies</button>
+        </nav>
+        <section id="confirmation" class="panel" aria-labelledby="confirmation-title" hidden>
+            <h2 id="confirmation-title" tabindex="-1"></h2>
+            <p id="confirmation-message"></p>
+            <div class="actions"><button id="cancel-confirmation" type="button">Cancel</button><button id="confirm-play" type="button">Play</button></div>
+        </section>
+        <h2 id="section-title">All movies</h2>
+        <p id="catalog-notice">{% if not movies %}The movie catalog is unavailable or empty. Try Refresh movies or ask a caregiver.{% endif %}</p>
+        <div id="movie-grid" class="movie-grid">
+            {% for movie in movies %}
+            <article class="movie-card">
+                <button type="button" class="play-button" data-movie-key="{{ movie.key }}" data-available="{{ 'true' if movie.available else 'false' }}" aria-label="Request {{ movie.title }} on Fire TV" disabled>
+                    <img src="{{ movie.poster }}" alt="" onerror="this.onerror=null;this.src='/static/poster-fallback.svg';">
+                    <span class="movie-title">{{ movie.title }}</span>
+                </button>
+            </article>
+            {% endfor %}
+        </div>
+        <details class="panel" id="caregiver-settings">
+            <summary>Caregiver settings</summary>
+            <p>Favorites and recent requests are saved only in this browser.</p>
+            <label class="setting"><input id="confirm-before-play" type="checkbox"> Confirm before playing</label>
+            <p id="storage-notice" role="status" aria-live="polite"></p>
+            <button id="reset-preferences" type="button">Reset local preferences</button>
+        </details>
+        <script id="initial-catalog" type="application/json">{{ movies|tojson }}</script>
+    </main>
+    <script src="{{ url_for('static', filename='tablet.js', v='3') }}" defer></script>
+    {% else %}
+    <h1>Zach's Movie Magic -- Now Showing</h1>
 
     <div class="movie-grid">
         {% for movie in movies %}
-        {% if tablet_api_enabled %}
-        <button type="button" class="movie-card" data-movie-key="{{ movie.key }}"
-                data-available="{{ 'true' if movie.available else 'false' }}"
-                aria-label="Request {{ movie.title }} on Fire TV" disabled>
-            <img src="{{ movie.poster }}" alt="" onerror="this.onerror=null;this.src='/static/poster-fallback.svg';">
-            <div class="movie-title">{{ movie.title }}</div>
-        </button>
-        {% else %}
         <div class="movie-card"
             onclick='{% if movie.id %}playMovie({{ movie.id|tojson }}, {{ movie.title|tojson }}){% else %}showToast({{ ("Add Disney+ ID for: " + movie.title)|tojson }}){% endif %}'>
             <img src="{{ movie.poster or 'https://placehold.co/500x750/333/666?text=No+poster' }}"
                 alt="{{ movie.title }}">
             <div class="movie-title">{{ movie.title }}</div>
         </div>
-        {% endif %}
         {% endfor %}
     </div>
 
-    {% if tablet_api_enabled %}
-    <script src="{{ url_for('static', filename='tablet.js') }}" defer></script>
-    {% else %}
     <div id="toast">Playing...</div>
 
     <script>
@@ -193,7 +226,6 @@
         }
     </script>
     {% endif %}
-
 </body>
 
 </html>

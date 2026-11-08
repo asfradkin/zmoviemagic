@@ -1,0 +1,12 @@
+{
+  "name": "zmoviemagic-tablet-tests",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "test": "node --test tests/tablet.test.cjs tests/ui/tablet.spec.cjs",
+    "test:unit": "node --test tests/tablet.test.cjs",
+    "test:ui": "node --test tests/ui/tablet.spec.cjs"
+  },
+  "devDependencies": { "playwright": "1.62.1" },
+  "engines": { "node": ">=20" }
+}

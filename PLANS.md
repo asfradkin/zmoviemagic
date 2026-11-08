@@ -3,8 +3,11 @@
 Status update, 2026-11-07: the user separately approved local Phase 2
 implementation, the 44-key manifest and local additive catalog migration.
 See [the implementation/release runbook](docs/phase-2-runbook.md). Production
-rollout and target-device release gates remain pending. Later phases remain
-specifications only; this document does not authorize deployment or production changes.
+rollout and target-device release gates remain pending. The user subsequently
+requested local Phase 3 implementation: P3.1–P3.3 and caregiver settings are now
+implemented; P3.4 target-device usability verification remains pending. See
+[tablet verification](docs/tablet-verification.md). Phase 4–6 remain specifications
+only; this document does not authorize deployment or production changes.
 
 ## Baseline and roadmap
 

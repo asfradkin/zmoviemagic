@@ -11,6 +11,8 @@ env/
 # Operator-created catalog rollback copies stay local.
 movies.json.backup-*
 .playwright_user_data/
+node_modules/
+test-results/
 *.egg-info/
 .eggs/
 
