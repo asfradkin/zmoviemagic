@@ -30,3 +30,7 @@ class Config:
 
     DISNEY_PACKAGE = "com.disney.disneyplus"
     INDEX_CACHE_MAX_AGE = 300
+    TABLET_API_ENABLED = os.environ.get("TABLET_API_ENABLED", "false").lower() in ("1", "true", "yes")
+    PLAYBACK_MAX_RECORDS = int(os.environ.get("PLAYBACK_MAX_RECORDS", "256"))
+    PLAYBACK_RETENTION_SECONDS = float(os.environ.get("PLAYBACK_RETENTION_SECONDS", "900"))
+    PLAYBACK_SHUTDOWN_GRACE_SECONDS = float(os.environ.get("PLAYBACK_SHUTDOWN_GRACE_SECONDS", "5"))

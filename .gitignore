@@ -8,6 +8,8 @@ venv/
 .venv/
 env/
 .env
+# Operator-created catalog rollback copies stay local.
+movies.json.backup-*
 .playwright_user_data/
 *.egg-info/
 .eggs/

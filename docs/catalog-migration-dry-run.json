@@ -1,0 +1,289 @@
+{
+  "mode": "dry-run",
+  "rows": 44,
+  "changed_rows": 44,
+  "input_sha256": "57afe4ffc6d9f7312a57a543c3f8d4444dc6d93bd7215ae5d92ab939defe7fec",
+  "preserved_original_fields": true,
+  "assignments": [
+    {
+      "row": 1,
+      "title": "Luca",
+      "key": "luca",
+      "aliases": []
+    },
+    {
+      "row": 2,
+      "title": "Moana",
+      "key": "moana",
+      "aliases": []
+    },
+    {
+      "row": 3,
+      "title": "WALL·E",
+      "key": "wall-e",
+      "aliases": [
+        "wall ee"
+      ]
+    },
+    {
+      "row": 4,
+      "title": "Greatest Showman",
+      "key": "greatest-showman",
+      "aliases": [
+        "the greatest showman"
+      ]
+    },
+    {
+      "row": 5,
+      "title": "Coco",
+      "key": "coco",
+      "aliases": []
+    },
+    {
+      "row": 6,
+      "title": "Wreck it Ralph",
+      "key": "wreck-it-ralph",
+      "aliases": []
+    },
+    {
+      "row": 7,
+      "title": "Zootopia",
+      "key": "zootopia",
+      "aliases": []
+    },
+    {
+      "row": 8,
+      "title": "Zenimation",
+      "key": "zenimation",
+      "aliases": []
+    },
+    {
+      "row": 9,
+      "title": "Frozen",
+      "key": "frozen",
+      "aliases": []
+    },
+    {
+      "row": 10,
+      "title": "Encanto",
+      "key": "encanto",
+      "aliases": []
+    },
+    {
+      "row": 11,
+      "title": "Tangled",
+      "key": "tangled",
+      "aliases": []
+    },
+    {
+      "row": 12,
+      "title": "Frozen II",
+      "key": "frozen-2",
+      "aliases": [
+        "frozen two"
+      ]
+    },
+    {
+      "row": 13,
+      "title": "Moana 2",
+      "key": "moana-2",
+      "aliases": [
+        "moana two"
+      ]
+    },
+    {
+      "row": 14,
+      "title": "The Aristocats",
+      "key": "the-aristocats",
+      "aliases": []
+    },
+    {
+      "row": 15,
+      "title": "Melody Time",
+      "key": "melody-time",
+      "aliases": []
+    },
+    {
+      "row": 16,
+      "title": "Mulan",
+      "key": "mulan",
+      "aliases": []
+    },
+    {
+      "row": 17,
+      "title": "Wreck it Ralph 2",
+      "key": "wreck-it-ralph-2",
+      "aliases": [
+        "wreck it ralph two"
+      ]
+    },
+    {
+      "row": 18,
+      "title": "The Aristocats",
+      "key": "the-aristocats-alternate",
+      "aliases": []
+    },
+    {
+      "row": 19,
+      "title": "Fantasia",
+      "key": "fantasia",
+      "aliases": []
+    },
+    {
+      "row": 20,
+      "title": "Fantasia 2000",
+      "key": "fantasia-2000",
+      "aliases": []
+    },
+    {
+      "row": 21,
+      "title": "Snow White",
+      "key": "snow-white",
+      "aliases": []
+    },
+    {
+      "row": 22,
+      "title": "The Lion King",
+      "key": "the-lion-king",
+      "aliases": []
+    },
+    {
+      "row": 23,
+      "title": "Elemental",
+      "key": "elemental",
+      "aliases": []
+    },
+    {
+      "row": 24,
+      "title": "Wish",
+      "key": "wish",
+      "aliases": []
+    },
+    {
+      "row": 25,
+      "title": "Mary Poppins Returns",
+      "key": "mary-poppins-returns",
+      "aliases": []
+    },
+    {
+      "row": 26,
+      "title": "The Little Mermaid",
+      "key": "the-little-mermaid",
+      "aliases": []
+    },
+    {
+      "row": 27,
+      "title": "Taylor Swift | The Eras Tour",
+      "key": "taylor-swift-the-eras-tour",
+      "aliases": []
+    },
+    {
+      "row": 28,
+      "title": "Monsters, Inc.",
+      "key": "monsters-inc",
+      "aliases": []
+    },
+    {
+      "row": 29,
+      "title": "Aladdin",
+      "key": "aladdin",
+      "aliases": []
+    },
+    {
+      "row": 30,
+      "title": "Finding Nemo",
+      "key": "finding-nemo",
+      "aliases": []
+    },
+    {
+      "row": 31,
+      "title": "Toy Story",
+      "key": "toy-story",
+      "aliases": []
+    },
+    {
+      "row": 32,
+      "title": "Toy Story 2",
+      "key": "toy-story-2",
+      "aliases": [
+        "toy story two"
+      ]
+    },
+    {
+      "row": 33,
+      "title": "Toy Story 3",
+      "key": "toy-story-3",
+      "aliases": [
+        "toy story three"
+      ]
+    },
+    {
+      "row": 34,
+      "title": "Toy Story 4",
+      "key": "toy-story-4",
+      "aliases": [
+        "toy story four"
+      ]
+    },
+    {
+      "row": 35,
+      "title": "Beauty and the Beast",
+      "key": "beauty-and-the-beast",
+      "aliases": []
+    },
+    {
+      "row": 36,
+      "title": "101 Dalmatians",
+      "key": "101-dalmatians",
+      "aliases": []
+    },
+    {
+      "row": 37,
+      "title": "Cars",
+      "key": "cars",
+      "aliases": []
+    },
+    {
+      "row": 38,
+      "title": "The Princess and the Frog",
+      "key": "the-princess-and-the-frog",
+      "aliases": []
+    },
+    {
+      "row": 39,
+      "title": "Hercules",
+      "key": "hercules",
+      "aliases": []
+    },
+    {
+      "row": 40,
+      "title": "Tarzan",
+      "key": "tarzan",
+      "aliases": []
+    },
+    {
+      "row": 41,
+      "title": "Cinderella",
+      "key": "cinderella",
+      "aliases": []
+    },
+    {
+      "row": 42,
+      "title": "Robin Hood",
+      "key": "robin-hood",
+      "aliases": []
+    },
+    {
+      "row": 43,
+      "title": "Peter Pan",
+      "key": "peter-pan",
+      "aliases": []
+    },
+    {
+      "row": 44,
+      "title": "Sleeping Beauty",
+      "key": "sleeping-beauty",
+      "aliases": []
+    }
+  ]
+}

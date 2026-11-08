@@ -37,6 +37,30 @@
             position: relative;
         }
 
+        button.movie-card {
+            border: 0;
+            padding: 0;
+            color: inherit;
+            font: inherit;
+            text-align: inherit;
+        }
+
+        button.movie-card:focus-visible {
+            outline: 3px solid #00d4ff;
+            outline-offset: 3px;
+        }
+
+        button.movie-card:disabled {
+            cursor: default;
+            opacity: 0.65;
+        }
+
+        #request-status {
+            max-width: 1200px;
+            margin: 12px auto;
+            min-height: 2.5em;
+        }
+
         .movie-card:hover {
             transform: scale(1.05);
             box-shadow: 0 0 15px rgba(0, 150, 255, 0.6);
@@ -115,17 +139,35 @@
 
     <h1>Zach's Movie Magic -- Now Showing</h1>
 
+    {% if tablet_api_enabled %}
+    <p id="request-status" role="status" aria-live="polite" aria-atomic="true">Choose a movie to request it on Fire TV.</p>
+    <noscript>Enable JavaScript to request a movie. No movie has been requested.</noscript>
+    {% if not movies %}<p>The movie catalog is unavailable. Please ask a caregiver.</p>{% endif %}
+    {% endif %}
+
     <div class="movie-grid">
         {% for movie in movies %}
+        {% if tablet_api_enabled %}
+        <button type="button" class="movie-card" data-movie-key="{{ movie.key }}"
+                data-available="{{ 'true' if movie.available else 'false' }}"
+                aria-label="Request {{ movie.title }} on Fire TV" disabled>
+            <img src="{{ movie.poster }}" alt="" onerror="this.onerror=null;this.src='/static/poster-fallback.svg';">
+            <div class="movie-title">{{ movie.title }}</div>
+        </button>
+        {% else %}
         <div class="movie-card"
             onclick='{% if movie.id %}playMovie({{ movie.id|tojson }}, {{ movie.title|tojson }}){% else %}showToast({{ ("Add Disney+ ID for: " + movie.title)|tojson }}){% endif %}'>
             <img src="{{ movie.poster or 'https://placehold.co/500x750/333/666?text=No+poster' }}"
                 alt="{{ movie.title }}">
             <div class="movie-title">{{ movie.title }}</div>
         </div>
+        {% endif %}
         {% endfor %}
     </div>
 
+    {% if tablet_api_enabled %}
+    <script src="{{ url_for('static', filename='tablet.js') }}" defer></script>
+    {% else %}
     <div id="toast">Playing...</div>
 
     <script>
@@ -150,6 +192,7 @@
             setTimeout(function () { x.className = x.className.replace("show", ""); }, 3000);
         }
     </script>
+    {% endif %}
 
 </body>
 
