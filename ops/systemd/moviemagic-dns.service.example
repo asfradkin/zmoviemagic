@@ -1,0 +1,17 @@
+[Unit]
+Description=Update only Movie Magic's existing GoDaddy A record
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=afradkin
+Group=afradkin
+ExecStart=/usr/bin/python3 -B /home/afradkin/zmoviemagic/tools/update_alexa_dns.py --apply
+TimeoutStartSec=40
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX

@@ -1,5 +1,13 @@
 # Phase 4 — Secure connectivity
 
+Planning revision, 2026-11-22: the selected [play-only Alexa design](../alexa-play-only-plan.md)
+hosts the handler in Flask behind a dedicated Cloudflare/proxy route. Amazon cannot
+supply Access service-token headers; the exact Alexa endpoint instead requires
+Amazon signature/timestamp verification and explicit skill/user authorization.
+Its separate edge protections require native/staging validation before approval.
+This does not remove Access/Bearer requirements from the machine API described
+below, and does not authorize live connectivity or production changes.
+
 Status: implementation specification. Backlog P4.1–P4.4. No live tunnel, DNS,
 credential or production configuration changes are authorized here.
 

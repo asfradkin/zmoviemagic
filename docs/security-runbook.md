@@ -1,5 +1,18 @@
 # Phase 4 security and connectivity runbook
 
+Household Alexa rollout follow-up, November 24, 2026: the owner-restricted signed
+endpoint, Caddy/Nginx path, public certificate, DNS updater and narrowed firewall
+are active, with real TV playback/profile checks reported by the user. Start with
+the [current operations guide](movie-magic-operations.md) and
+[verification evidence](alexa-verification.md). Older planning notes below concern
+the broader machine API and remain historical preparation; this rollout does not
+enable its routes, waive its authentication or complete every roadmap gate.
+
+Planning note, 2026-11-22: the [local play-only Alexa plan](alexa-play-only-plan.md)
+introduces a future dedicated signed-request endpoint with a separate edge policy.
+It cannot use the Lambda service-token path below. No implementation or deployment
+is recorded here; preserve all existing machine API authentication requirements.
+
 Local P4.1–P4.3 implementation approved 2026-11-07. This runbook is preparation,
 not authorization to install software, provision live secrets, change production
 configuration/firewalls/DNS, restart services, publish a tunnel or contact the TV.

@@ -1,5 +1,31 @@
 # Phase 5 — Alexa integration
 
+Profile follow-up, 2026-11-24: after successful play-only live checks, the user
+separately requested automatic selection of the fixed Disney+ profile `zach`.
+The captured Fire TV XML identifies its focused card on the profile picker. A
+default-off backend helper now recognizes that exact state and sends one Select
+event, without relaunching the movie, navigating profiles or entering a PIN. It
+stays inside existing command admission/deadline boundaries. See
+[profile design and rollout](../disney-profile-selection.md). Local tests do not
+authorize production installation/restart or prove on-screen behavior. This is
+a narrow extension to play startup, not approval for broader media controls.
+
+Implementation follow-up, 2026-11-22: the selected local play-only endpoint and
+conversation are implemented under a separate user request, behind the default-off
+Alexa flag. See [setup/code](../alexa-setup.md) and [verification](../alexa-verification.md).
+Full M5 controls and production/device acceptance remain pending. This does not
+authorize cloud account changes, deployment or live-device tests.
+
+Planning update, 2026-11-22: the user requested a smaller play-only first release
+with understandable Python and numbered clarification for up to three movies.
+The user selected the existing Flask host plus Cloudflare, without Lambda/AWS.
+For this release the linked plan supersedes the Lambda, Secrets Manager and HTTP
+resolver/client requirements below: a verified Alexa endpoint calls existing
+MovieService and PlaybackService directly. Media controls remain deferred.
+See the [play-only planning draft](../alexa-play-only-plan.md). The broader control
+requirements below remain future scope; a play-only release does not complete M5.
+No feature implementation, account setup or deployment is authorized by this plan.
+
 Status: implementation specification. Backlog P5.1–P5.5. Prerequisites:
 [Phase 2](02-playback-api.md) API and [Phase 4](04-secure-connectivity.md) boundaries.
 

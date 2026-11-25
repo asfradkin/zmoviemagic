@@ -1,0 +1,348 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "movie magic",
+      "intents": [
+        {
+          "name": "PlayMovieIntent",
+          "slots": [
+            {
+              "name": "MovieTitle",
+              "type": "MOVIE_TITLE"
+            }
+          ],
+          "samples": [
+            "play {MovieTitle}",
+            "watch {MovieTitle}",
+            "put on {MovieTitle}"
+          ]
+        },
+        {
+          "name": "ChooseMovieIntent",
+          "slots": [
+            {
+              "name": "Choice",
+              "type": "AMAZON.NUMBER"
+            }
+          ],
+          "samples": [
+            "number {Choice}",
+            "option {Choice}",
+            "{Choice}"
+          ]
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        }
+      ],
+      "types": [
+        {
+          "name": "MOVIE_TITLE",
+          "values": [
+            {
+              "id": "luca",
+              "name": {
+                "value": "Luca"
+              }
+            },
+            {
+              "id": "moana",
+              "name": {
+                "value": "Moana"
+              }
+            },
+            {
+              "id": "wall-e",
+              "name": {
+                "value": "WALL·E",
+                "synonyms": [
+                  "wall ee"
+                ]
+              }
+            },
+            {
+              "id": "greatest-showman",
+              "name": {
+                "value": "Greatest Showman",
+                "synonyms": [
+                  "the greatest showman"
+                ]
+              }
+            },
+            {
+              "id": "coco",
+              "name": {
+                "value": "Coco"
+              }
+            },
+            {
+              "id": "wreck-it-ralph",
+              "name": {
+                "value": "Wreck it Ralph"
+              }
+            },
+            {
+              "id": "zootopia",
+              "name": {
+                "value": "Zootopia"
+              }
+            },
+            {
+              "id": "zenimation",
+              "name": {
+                "value": "Zenimation"
+              }
+            },
+            {
+              "id": "frozen",
+              "name": {
+                "value": "Frozen"
+              }
+            },
+            {
+              "id": "encanto",
+              "name": {
+                "value": "Encanto"
+              }
+            },
+            {
+              "id": "tangled",
+              "name": {
+                "value": "Tangled"
+              }
+            },
+            {
+              "id": "frozen-2",
+              "name": {
+                "value": "Frozen II",
+                "synonyms": [
+                  "frozen two"
+                ]
+              }
+            },
+            {
+              "id": "moana-2",
+              "name": {
+                "value": "Moana 2",
+                "synonyms": [
+                  "moana two"
+                ]
+              }
+            },
+            {
+              "id": "the-aristocats",
+              "name": {
+                "value": "The Aristocats"
+              }
+            },
+            {
+              "id": "melody-time",
+              "name": {
+                "value": "Melody Time"
+              }
+            },
+            {
+              "id": "mulan",
+              "name": {
+                "value": "Mulan"
+              }
+            },
+            {
+              "id": "wreck-it-ralph-2",
+              "name": {
+                "value": "Wreck it Ralph 2",
+                "synonyms": [
+                  "wreck it ralph two"
+                ]
+              }
+            },
+            {
+              "id": "the-aristocats-alternate",
+              "name": {
+                "value": "The Aristocats"
+              }
+            },
+            {
+              "id": "fantasia",
+              "name": {
+                "value": "Fantasia"
+              }
+            },
+            {
+              "id": "fantasia-2000",
+              "name": {
+                "value": "Fantasia 2000"
+              }
+            },
+            {
+              "id": "snow-white",
+              "name": {
+                "value": "Snow White"
+              }
+            },
+            {
+              "id": "the-lion-king",
+              "name": {
+                "value": "The Lion King"
+              }
+            },
+            {
+              "id": "elemental",
+              "name": {
+                "value": "Elemental"
+              }
+            },
+            {
+              "id": "wish",
+              "name": {
+                "value": "Wish"
+              }
+            },
+            {
+              "id": "mary-poppins-returns",
+              "name": {
+                "value": "Mary Poppins Returns"
+              }
+            },
+            {
+              "id": "the-little-mermaid",
+              "name": {
+                "value": "The Little Mermaid"
+              }
+            },
+            {
+              "id": "taylor-swift-the-eras-tour",
+              "name": {
+                "value": "Taylor Swift | The Eras Tour"
+              }
+            },
+            {
+              "id": "monsters-inc",
+              "name": {
+                "value": "Monsters, Inc."
+              }
+            },
+            {
+              "id": "aladdin",
+              "name": {
+                "value": "Aladdin"
+              }
+            },
+            {
+              "id": "finding-nemo",
+              "name": {
+                "value": "Finding Nemo"
+              }
+            },
+            {
+              "id": "toy-story",
+              "name": {
+                "value": "Toy Story"
+              }
+            },
+            {
+              "id": "toy-story-2",
+              "name": {
+                "value": "Toy Story 2",
+                "synonyms": [
+                  "toy story two"
+                ]
+              }
+            },
+            {
+              "id": "toy-story-3",
+              "name": {
+                "value": "Toy Story 3",
+                "synonyms": [
+                  "toy story three"
+                ]
+              }
+            },
+            {
+              "id": "toy-story-4",
+              "name": {
+                "value": "Toy Story 4",
+                "synonyms": [
+                  "toy story four"
+                ]
+              }
+            },
+            {
+              "id": "beauty-and-the-beast",
+              "name": {
+                "value": "Beauty and the Beast"
+              }
+            },
+            {
+              "id": "101-dalmatians",
+              "name": {
+                "value": "101 Dalmatians"
+              }
+            },
+            {
+              "id": "cars",
+              "name": {
+                "value": "Cars"
+              }
+            },
+            {
+              "id": "the-princess-and-the-frog",
+              "name": {
+                "value": "The Princess and the Frog"
+              }
+            },
+            {
+              "id": "hercules",
+              "name": {
+                "value": "Hercules"
+              }
+            },
+            {
+              "id": "tarzan",
+              "name": {
+                "value": "Tarzan"
+              }
+            },
+            {
+              "id": "cinderella",
+              "name": {
+                "value": "Cinderella"
+              }
+            },
+            {
+              "id": "robin-hood",
+              "name": {
+                "value": "Robin Hood"
+              }
+            },
+            {
+              "id": "peter-pan",
+              "name": {
+                "value": "Peter Pan"
+              }
+            },
+            {
+              "id": "sleeping-beauty",
+              "name": {
+                "value": "Sleeping Beauty"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

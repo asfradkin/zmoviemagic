@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import socket
 import time
+from uuid import uuid4
 from functools import lru_cache
 from threading import Lock
 
@@ -13,6 +14,8 @@ from ppadb.client import Client as AdbClient
 from ppadb.connection import Connection
 from ppadb.device import Device
 from ppadb.protocol import Protocol
+
+from services.disney_profile import is_focused_profile
 
 
 logger = logging.getLogger(__name__)
@@ -134,11 +137,15 @@ class FireTVService:
 
     def __init__(
         self, host, port=5555, disney_package="com.disney.disneyplus",
-        timeout_seconds=5,
+        timeout_seconds=5, profile_name="",
     ):
         self.host = host
         self.port = port
         self.disney_package = disney_package
+        if (not isinstance(profile_name, str) or len(profile_name) > 64
+                or any(ord(char) < 32 for char in profile_name)):
+            raise ValueError("DISNEY_PROFILE_NAME must be at most 64 printable characters")
+        self.profile_name = profile_name.strip()
         self.timeout_seconds = float(timeout_seconds)
         if not math.isfinite(self.timeout_seconds) or self.timeout_seconds <= 0:
             raise ValueError("ADB_TIMEOUT_SECONDS must be a finite positive number")
@@ -261,6 +268,7 @@ class FireTVService:
 
         try:
             self._shell(device, command)
+            self._select_profile_after_launch()
             return {"retried": False}
         except (RuntimeError, OSError) as exc:
             self._device = None
@@ -272,6 +280,7 @@ class FireTVService:
             if device:
                 try:
                     self._shell(device, command)
+                    self._select_profile_after_launch()
                     return {"retried": True}
                 except Exception as retry_exc:
                     self._device = None
@@ -322,6 +331,7 @@ class FireTVService:
                     budget.remaining()
                 if any(marker in output.casefold() for marker in ("error:", "exception", "unable to resolve intent")):
                     raise DeliveryError("command_rejected", connection=observed)
+                self._select_profile_after_launch(budget)
                 return {"connection": observed}
             except DeliveryError:
                 raise
@@ -335,3 +345,40 @@ class FireTVService:
                     raise DeliveryError("delivery_unknown", "unknown", observed) from None
                 if attempt:
                     raise DeliveryError("device_unavailable", connection="disconnected") from None
+
+    def _profile_shell(self, command, budget):
+        device = self._get_budget_device(budget)
+        with device.create_connection(set_transport=False, timeout=budget.remaining()) as connection:
+            device.transport(connection)
+            connection.send("shell:" + command)
+            output = connection.read_all().decode("utf-8", errors="replace")
+            budget.remaining()
+            return output
+
+    def _select_profile_after_launch(self, launch_budget=None):
+        if not self.profile_name:
+            return
+        # Keep this best-effort helper outside the launch's retry/error decision:
+        # the movie command was already delivered, even if profile inspection fails.
+        try:
+            clock = launch_budget.clock if launch_budget else time.monotonic
+            budget = CommandBudget(8, self.timeout_seconds, clock)
+            if launch_budget:
+                budget.deadline = min(budget.deadline, launch_budget.deadline)
+            for _ in range(3):
+                time.sleep(min(0.5, budget.remaining()))
+                budget.remaining()
+                # Unique file per probe prevents a delayed/failed dump being mistaken
+                # for fresh UI. Cleanup runs on the TV after the dump/cat finishes.
+                path = "/sdcard/zmm-profile-" + uuid4().hex + ".xml"
+                command = f"uiautomator dump {path} >/dev/null && cat {path}; rm -f {path}"
+                xml = self._profile_shell(command, budget)
+                if is_focused_profile(xml, self.profile_name, self.disney_package):
+                    # One fixed Select event, only after a fresh focused-card match.
+                    # A lost response is ambiguous; never repeat this press or launch.
+                    self._profile_shell("input keyevent 23", budget)
+                    logger.info("Disney profile action=select_sent")
+                    return
+            logger.info("Disney profile action=not_detected")
+        except Exception as error:
+            logger.info("Disney profile action=unconfirmed reason=%s", type(error).__name__)

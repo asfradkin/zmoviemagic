@@ -9,6 +9,7 @@ from services.playback_service import APIError
 
 class RateLimitService:
     POLICIES = {
+        "alexa": ((60, 60), (4, 1)),
         "request": ((120, 60), (10, 1)),
         "command": ((10, 60), (2, 2)),
         "failure": ((30, 60),),

@@ -1,5 +1,75 @@
 # ZMovieMagic v2 implementation plan
 
+Architecture documentation, November 25, 2026: [current architecture](docs/architecture.md)
+now describes the working household topology; [design decisions](docs/architecture-decisions.md)
+records the reasons, alternatives and tradeoffs. The previous baseline/target
+architecture body is preserved in [history](docs/architecture-history.md).
+This documentation update changes no running configuration or application behavior.
+
+Current household reference: [Movie Magic operations](docs/movie-magic-operations.md)
+consolidates the working setup, maintenance, troubleshooting and recovery. Read
+it before the historical planning updates below when operating the installed app.
+
+Live follow-up completion, 2026-11-24: the user confirmed the narrowed firewall
+with a fresh SSH connection, a successful GoDaddy DNS updater service and enabled
+five-minute timer, and automatic selection of Disney+ profile `zach` followed by
+actual playback. A subsequent ordinary launch past the picker also passed. The
+profile source patch passed all 324 server tests (28 SDK warnings); the DNS tool
+previously passed 43 tests in its separate Ubuntu check directory. See the
+[live verification record](docs/alexa-verification.md). These complete the three
+requested follow-ups, without claiming the unrelated broader roadmap gates.
+
+Profile implementation follow-up, 2026-11-24: the user supplied a real Disney+
+picker hierarchy and requested automatic selection of its no-PIN `zach` profile.
+A default-off focused-card recognizer and bounded FireTVService helper are now
+prepared locally, with mocked recognition/failure/serialization checks. Movie
+launch, identity, grid and catalog contracts are preserved. See
+[profile design/rollout](docs/disney-profile-selection.md). No profile update has
+been installed on the server or tested on the live device yet.
+
+Follow-up, 2026-11-24: the user confirmed live Alexa/TV playback for all five
+requested titles and ambiguity selection, and then requested automatic DNS
+updates, firewall cleanup and selection of the Disney+ profile `zach` when needed.
+The user verified the narrowed UFW rules and a fresh SSH connection. A separate
+standard-library GoDaddy A-record updater, mocked checks and timer templates are
+prepared locally; the full suite passed 336 tests with two native Nginx skips.
+See [DNS setup](docs/alexa-dns-updates.md) and [current live evidence](docs/alexa-verification.md).
+Ubuntu updater verification, production installation/activation, live API access
+and fixed-profile screen detection remain pending. Existing rollout statements
+below are historical preparation notes, not evidence contradicting this update.
+
+Connectivity follow-up, 2026-11-24: the user is pursuing direct HTTPS with GoDaddy
+DNS and Deco DDNS. Their existing Caddy 2.6.2 already owns 80/443 and has a LAN
+site proxying to Flask with an internal certificate. A separate proposed Caddy
+policy now restricts that site to home peers and exposes only the signed Alexa
+URI through the loopback Nginx guard, with TLS-ALPN certificate validation on 443.
+The proposal has nine isolated local native checks; user-host validation, package
+maintenance review and explicit production/publication approval remain pending.
+See [Caddy notes](ops/caddy/README.md) and [verification](docs/alexa-verification.md).
+No Caddy reload, port forwarding or live TV command was performed by the agent.
+
+Implementation update, 2026-11-22: the user separately requested implementation of
+the selected local play-only Alexa design. The default-off Flask endpoint,
+conversation, bounded SDK verification adapter, model/export tool and isolated
+tests are implemented. See the [code/setup walkthrough](docs/alexa-setup.md) and
+[verification record](docs/alexa-verification.md). Accounts, Linux dependency
+validation, native proxy/tunnel checks, DNS/edge setup, user code walkthrough and
+real Echo/iPad/TV acceptance remain pending. This is not full M5 completion or
+production rollout authorization.
+
+Planning update, 2026-11-22: a [play-only Alexa first release](docs/alexa-play-only-plan.md)
+is being designed with the user. It reuses catalog resolution and launch services,
+defers media controls, and makes a user-readable Python walkthrough an acceptance
+gate. The user confirmed own-account devices, en-US, five catalog test titles,
+existing `fradkin.net` ownership and a preference for no or very low extra costs.
+The user selected local Flask hosting through Cloudflare, replacing the proposed
+Lambda path for this release. Direct Amazon request verification and a dedicated
+edge route are specified in the draft; AWS and a new resolver API are unnecessary.
+GoDaddy manages both domain registration and DNS, and both website and email use
+the domain. Preserve both services before any proposed DNS changes.
+Target extra subscription cost is $0, subject to edge-plan checks.
+That planning update authorized no deployment; the broader M5 backlog remains pending.
+
 Status update, 2026-11-07: the user separately approved local Phase 2
 implementation, the 44-key manifest and local additive catalog migration.
 See [the implementation/release runbook](docs/phase-2-runbook.md). Production

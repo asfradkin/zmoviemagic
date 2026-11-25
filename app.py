@@ -7,6 +7,7 @@ from flask import Flask, g, jsonify, render_template, request
 from werkzeug.exceptions import RequestEntityTooLarge, HTTPException
 
 from config import Config
+from alexa.web import register_alexa, validate_settings
 from services.auth_service import AuthService
 from services.rate_limit_service import RateLimitService
 from services.firetv_service import FireTVService
@@ -23,6 +24,7 @@ def create_app(config=Config):
     app.config["SECRET_KEY"] = config.FLASK_SECRET_KEY
     # Validate security settings before catalog refresh or any other network work.
     auth = AuthService(config)
+    validate_settings(config)
     lifetime = getattr(config, "SESSION_LIFETIME_SECONDS", 43200)
     if not 60 <= lifetime <= 43200:
         raise ValueError("Session lifetime must be between 60 seconds and 12 hours")
@@ -54,6 +56,7 @@ def create_app(config=Config):
         port=config.FIRE_TV_PORT,
         disney_package=config.DISNEY_PACKAGE,
         timeout_seconds=config.ADB_TIMEOUT_SECONDS,
+        profile_name=getattr(config, "DISNEY_PROFILE_NAME", ""),
     )
     playback_service = PlaybackService(
         firetv_service=firetv_service,
@@ -93,7 +96,7 @@ def create_app(config=Config):
 
     @app.after_request
     def api_cache_policy(response):
-        if request.path.startswith(("/api/", "/remote/", "/play/")):
+        if request.path.startswith(("/api/", "/remote/", "/play/")) or request.path == "/alexa":
             response.headers["Cache-Control"] = "no-store"
         if request.path == "/":
             response.headers["Cache-Control"] = "private, no-store"
@@ -105,6 +108,12 @@ def create_app(config=Config):
     @app.before_request
     def local_api_boundary():
         auth.check_host()
+        # Alexa has its own signature + skill/user boundary, even on loopback.
+        # Do not grant it LAN, browser-session, Bearer or forwarding-header trust.
+        if request.path == "/alexa":
+            if not getattr(config, "ALEXA_ENABLED", False):
+                raise APIError("not_found", 404, "Not found.")
+            return
         remote = request.path.startswith("/remote/")
         if remote:
             limiter.consume("proxy", "origin")
@@ -244,6 +253,7 @@ def create_app(config=Config):
         except RuntimeError as exc:
             return jsonify({"status": "error", "message": str(exc)}), 500
 
+    register_alexa(app, config)
     return app
 
 

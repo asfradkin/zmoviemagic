@@ -11,6 +11,9 @@ load_dotenv(BASE_DIR / ".env")
 
 
 class Config:
+    ALEXA_ENABLED = os.environ.get("ALEXA_ENABLED", "false").lower() in ("1", "true", "yes")
+    ALEXA_SKILL_ID = os.environ.get("ALEXA_SKILL_ID", "").strip()
+    ALEXA_USER_ID = os.environ.get("ALEXA_USER_ID", "").strip()
     REMOTE_API_ENABLED = os.environ.get("REMOTE_API_ENABLED", "false").lower() in ("1", "true", "yes")
     API_TOKEN_FILE = os.environ.get("API_TOKEN_FILE", "").strip()
     TRUSTED_LAN_CIDRS = tuple(value.strip() for value in os.environ.get("TRUSTED_LAN_CIDRS", "").split(",") if value.strip())
@@ -20,6 +23,7 @@ class Config:
     RATE_LIMIT_IDLE_SECONDS = int(os.environ.get("RATE_LIMIT_IDLE_SECONDS", "900"))
     FIRE_TV_IP = os.environ.get("FIRE_TV_IP", "").strip()
     FIRE_TV_PORT = int(os.environ.get("FIRE_TV_PORT", "5555"))
+    DISNEY_PROFILE_NAME = os.environ.get("DISNEY_PROFILE_NAME", "").strip()
     ADB_TIMEOUT_SECONDS = float(os.environ.get("ADB_TIMEOUT_SECONDS", "5"))
 
     TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "").strip()

@@ -1,0 +1,11 @@
+# Approved installation only. Separate named tunnel/route from the machine API.
+tunnel: REPLACE_WITH_NAMED_ALEXA_TUNNEL_UUID
+credentials-file: /etc/cloudflared/REPLACE_WITH_ALEXA_TUNNEL_UUID.json
+ingress:
+  - hostname: movies-api.fradkin.net
+    path: ^/alexa$
+    service: http://127.0.0.1:8082
+    originRequest:
+      httpHostHeader: movies-api.fradkin.net
+      connectTimeout: 1s
+  - service: http_status:404

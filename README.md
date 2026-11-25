@@ -4,7 +4,28 @@ A simple web app that shows a Netflix-style grid of movies and can launch them o
 
 My only mission is to make it easy for Zach and other kids like him to control a part of their lives.  Please use this code, modify it as you please and share.  Per the license, this is not designed to make a profit or be sold - this is meant to help families and children - not make money.  If your intent is to make money, please go do that on your own.  Thank you for your understanding and respecting my wishes of helping people over profit.  
 
+## Using the working household setup
+
+Start with [Movie Magic: everyday use and maintenance](docs/movie-magic-operations.md)
+for the verified voice command, server/network map, configuration locations,
+automatic DNS, firewall rules, Disney+ profile handling and troubleshooting.
+The household Alexa setup passed real TV checks, including all five requested
+titles, ambiguity choices, automatic `zach` selection and normal subsequent
+launches. The guide records maintenance and rollback steps without real secrets.
+
+For the diagrams and reasons behind the setup, read the
+[current architecture](docs/architecture.md) and
+[design decisions](docs/architecture-decisions.md), including why Caddy, private
+Nginx, direct HTTPS, local Python hosting and automatic GoDaddy DNS were chosen.
+
 ## Setup
+
+Optional play-only Alexa support is **disabled by default for new installs**.
+The verified household install enables it through Caddy, a loopback Nginx guard
+and Amazon signature/owner checks. No Cloudflare or Lambda/AWS account is needed.
+See the [plain-English code/setup walkthrough](docs/alexa-setup.md) for rebuilding
+that configuration. Other installations still require their own reviewed setup
+and real-device checks; do not publish the LAN UI or legacy playback endpoint.
 
 1. **Python 3** with Flask and ppadb: `pip install -r requirements.txt`
 2. **ADB** (Android Platform Tools) installed and on your PATH

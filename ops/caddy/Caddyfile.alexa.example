@@ -1,0 +1,55 @@
+# Reviewed example only. Do not install/reload before isolated tests and approval.
+{
+    servers {
+        max_header_size 16KB
+        timeouts {
+            read_header 5s
+            idle 1m
+        }
+    }
+}
+
+# Preserve the existing LAN hostname and its internal certificate.
+moviemagic.fradkin.net {
+    tls internal
+
+    # Check the direct peer, not a spoofable X-Forwarded-For header.
+    @home remote_ip 192.168.68.0/22 127.0.0.1 ::1
+    handle @home {
+        reverse_proxy 127.0.0.1:8000
+    }
+    handle {
+        respond "Local network only" 403
+    }
+}
+
+# New, independently authenticated endpoint. No grid, legacy or machine API here.
+movies-api.fradkin.net {
+    # Public certificate, renewed over TLS-ALPN on 443. No Certbot/port 80 forward.
+    tls {
+        issuer acme {
+            disable_http_challenge
+        }
+    }
+
+    # Match the original URI exactly, including absence of query/encoding variants.
+    @alexa {
+        method POST
+        expression `{http.request.orig_uri} == "/alexa"`
+    }
+    handle @alexa {
+        request_body {
+            max_size 32768
+        }
+        reverse_proxy 127.0.0.1:8082 {
+            header_up Host movies-api.fradkin.net
+            transport http {
+                dial_timeout 1s
+                response_header_timeout 6s
+            }
+        }
+    }
+    handle {
+        respond "Not found" 404
+    }
+}

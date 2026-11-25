@@ -1,151 +1,217 @@
-# Current and target architecture
+# Movie Magic: current architecture
 
-Inspected 2026-11-07. The Phase 1 section below records the original baseline.
-Phase 2 is now locally implemented under separate user approval; see the
-[implementation/release runbook](phase-2-runbook.md) for current behavior and
-verification. The separately requested Phase 3 tablet client is locally
-implemented behind the same default-off flag; see [tablet verification](tablet-verification.md).
-Production and actual-iPad release gates remain pending. Local Phase 4 auth,
-LAN sessions/CSRF, quotas and remote aliases are now implemented under separate
-approval; [verification](phase-4-verification.md) records remaining native
-proxy/tunnel and staging gates. Phases 5–6 remain proposed. Historical Phase 1
-limitations below describe the original baseline, not the current implementation.
+Documented **November 25, 2026**, from the implementation and the household live
+checks recorded in this chat. This page describes the working deployment.
+For why each choice was made, see [design decisions](architecture-decisions.md).
+For commands and maintenance, see [the operations guide](movie-magic-operations.md).
+Earlier baseline and alternative designs are preserved in
+[architecture history](architecture-history.md); they are not the deployed topology.
 
-Current Phase 4 startup validates explicit LAN CIDRs/Host authorities and a
-non-default stable session secret before catalog work. Remote API is disabled by
-default; when enabled it additionally requires a protected token registry.
-Routes pass authenticated principals into the existing playback service; remote
-aliases share the same dispatcher. Local legacy routes remain trusted-LAN-only.
-Session HTML is private/no-store and browser commands include CSRF. See the
-[security runbook](security-runbook.md) before any approved deployment.
+## Purpose and boundaries
 
-## Current system (Phase 1)
+Movie Magic lets Zach choose a movie from the local browser grid or through one
+voice sentence: "Alexa, ask Movie Magic to play Luca." The existing Ubuntu laptop
+coordinates the request; the Fire TV runs Disney+ and plays the movie. Neither
+the Echo nor the laptop streams the movie as part of Movie Magic.
+
+The design prioritizes understandable Python, the existing household workflow,
+few services and low additional cost. The Alexa release starts movies, resolves
+ambiguous titles and can select a recognized no-PIN profile. It does not implement
+general media controls or a general-purpose remote-control API for the internet.
+
+## Application architecture
 
 ```mermaid
 flowchart LR
-  I[iPad browser] --> F[Flask routes]
-  F --> M[MovieService]
-  M --> J[movies.json]
-  M --> T[TMDB posters at startup]
-  F --> P[PlaybackService lock and cooldown]
-  P --> V[FireTVService]
-  V --> A[Local ADB server 127.0.0.1:5037]
-  A --> D[Fire TV LAN:5555]
-  D --> X[Disney+ deep link]
+    Grid[Local browser grid] --> Flask[Flask app factory and routes]
+    Alexa[Verified Alexa request] --> Conversation[Alexa conversation functions]
+    Conversation --> Movies[MovieService: title and alias resolution]
+    Conversation --> Playback[PlaybackService: admission and one active job]
+    Flask --> Movies
+    Flask --> Playback
+    Movies --> Catalog[movies.json]
+    Movies -. missing poster refresh .-> TMDB[TMDB]
+    Playback --> Fire[FireTVService: bounded ADB commands]
+    Fire --> ADB[Local ADB server]
+    ADB --> TV[Fire TV and Disney+]
+    Fire --> Profile[Fresh picker recognition]
 ```
 
-`app.py` exposes `create_app(config=Config)` and eagerly creates `app` on import.
-It loads the catalog and refreshes missing posters during creation. A missing
-TMDB key aborts startup even with cached posters. Services live in
-`app.extensions`; fixtures reload app/config and replace actual launches.
+| Component | Responsibility | Boundary |
+|---|---|---|
+| `app.py`, `config.py` | Construct Flask/services and load private settings | Preserve app factory; no client-provided shell commands |
+| `alexa/web.py` | HTTP validation, Amazon verification, owner authorization | No TV side effects before validation |
+| `alexa/verification.py` | Bound the SDK certificate fetch/cache | Reuse SDK signature/chain checks rather than invent cryptography |
+| `alexa/skill.py` | Plain Python conversation, play/choice/help/cancel | Call the existing services directly; no self-HTTP or ADB |
+| `MovieService` | Validate catalog; resolve titles/aliases to permanent keys | Never guess between ambiguous aliases; keep provider mapping backend-owned |
+| `PlaybackService` | Admission, cooldown, jobs, request repeat protection | Serialize legacy and newer requests against one command reservation |
+| `FireTVService` | Existing wake/Home/deep link and bounded profile helper | Own fixed ADB templates and uncertain-delivery handling |
+| `services/disney_profile.py` | Recognize exact focused picker state | Pure XML recognition, no device or network access |
+| `tools/update_alexa_dns.py` | Maintain the dedicated public A record | Separate scheduled process; no Flask/TV dependency |
 
-| Component | Verified responsibilities and limitations |
+The app runs under Gunicorn with **one worker and four threads**, because command
+reservations, quotas, jobs and repeat protection live in that process. One worker
+does not mean one HTTP thread. Adding more workers would create separate locks
+and require a new shared-state design.
+
+The Alexa handler can respond once the playback job is admitted. Device startup
+and optional profile inspection happen in the existing worker; the spoken reply
+does not wait for or establish on-screen playback.
+
+The JSON catalog remains authoritative. Application movie keys are immutable;
+titles, aliases and provider IDs have different roles. New Alexa/API paths use
+keys, while the temporary legacy `/play/<video_id>` contract still accepts valid
+provider IDs even when absent from the catalog. Preserve that compatibility until
+an explicitly approved retirement. Do not replace the catalog from a code bundle
+or migrate its schema silently at startup.
+
+## Network architecture
+
+```mermaid
+flowchart TB
+    subgraph Internet[Internet services]
+        Amazon[Amazon Alexa]
+        DNS[GoDaddy authoritative DNS]
+        IP[ipify public IPv4 lookup]
+    end
+    subgraph Home[Home network: 192.168.68.0/22]
+        Echo[Echo device] --> Amazon
+        Deco[Deco router: 192.168.68.1]
+        Admin[Admin PC: 192.168.68.112]
+        Tablet[iPad or other home browser]
+        TV[Fire TV: configured LAN address]
+        subgraph Laptop[Ubuntu jukebox: 192.168.68.106]
+            Caddy[Caddy: TCP 443]
+            Nginx[Nginx guard: 127.0.0.1:8082]
+            Flask[Gunicorn and Flask: port 8000]
+            ADB[ADB client targets local server: 127.0.0.1:5037]
+            Updater[Standalone DNS updater]
+        end
+        Deco -->|Forward TCP 443 only| Caddy
+        Admin -->|SSH TCP 22| Laptop
+        Tablet -->|LAN HTTP TCP 8000| Flask
+        Caddy -->|Only exact POST /alexa| Nginx
+        Nginx -->|Loopback origin| Flask
+        Flask --> ADB
+        ADB -->|LAN ADB, configured port normally 5555| TV
+        Updater -->|Read current public IP| IP
+        Updater -->|Read or replace one A record| DNS
+    end
+    Amazon -->|HTTPS movies-api.fradkin.net/alexa| Deco
+    Amazon -. hostname lookup .-> DNS
+```
+
+The Echo sends speech to Amazon. Amazon, rather than the Echo calling the laptop
+directly, sends the skill's HTTPS request through the public endpoint. The iPad
+path is local and does not traverse that public endpoint.
+
+| Address or port | Role and access |
 |---|---|
-| `config.py` | Repository .env; class-level settings; default development secret; 5-second ADB inactivity timeout; 2-second cooldown |
-| MovieService | JSON array; poster caching; shallow list copy; Disney ID lookup; malformed/missing catalog becomes empty; no per-entry validation |
-| PlaybackService | Nonblocking process-local lock; monotonic cooldown; failed attempts consume cooldown; legacy success text |
-| FireTVService | Finds/starts ADB; finite socket timeouts; persistent device; one reconnect for some failures; no shell retry on timeout/unauthorized |
-| `/` | Jinja grid; 85px minimum columns; clickable divs; transient toast; provider IDs; 300-second public cache |
-| `/play/<video_id>` | Mutating GET; valid unknown IDs pass through; 200 success, 400 invalid, 429 busy, 403 device authorization, 500 ADB failure |
-| `/health` | 200 status ok once serving; no-store; no device, catalog or playback verification |
-| systemd | Gunicorn 0.0.0.0:8000; one worker/four threads; HOME preserves authorized ADB identity |
+| `192.168.68.0/22` | Main trusted home subnet, mask `255.255.252.0` |
+| `192.168.68.106` | Laptop DHCP reservation in Deco |
+| `192.168.68.112` | Admin-PC reservation; allowed SSH source |
+| Laptop `wlp1s0` | Interface used in the current UFW rules |
+| Public TCP 443 | Deco forwards to laptop 443; Caddy accepts HTTPS |
+| Laptop TCP 8000 | Existing grid/application; allowed only from approved home subnet by UFW |
+| Loopback TCP 8082 | Nginx Alexa guard; no LAN/WAN listener |
+| Loopback client target TCP 5037 | Local ADB server; never publish it |
+| Fire TV configured LAN ADB port | Normally 5555; never forward it from the internet |
+| Caddy admin port 2019 | Local administration; never forward it |
+| TCP 80 | Caddy listens locally; no public router forward needed here |
+| UDP 5353 | Existing IPv4/IPv6 discovery rules retained during cleanup |
 
-Launch wakes the TV (224), sends Home (3), then launches a Disney+ VIEW URL with
-`startTime=0`. Preserve this sequence. Completion only establishes command-delivery
-evidence. Shell output is currently ignored, so Android activity errors can be
-misreported as success. Socket limits are per-operation inactivity limits, not
-total request deadlines. A broken-connection retry can duplicate partial delivery.
+The diagram describes the observed IPv4 publication path. UFW also has a public
+TCP 443 IPv6 allow rule on Wi-Fi, but the work did not establish a separate public
+IPv6 route/port scan. Do not infer full IPv6 auditing from working IPv4 Alexa calls.
 
-The catalog has 44 entries, all with IDs, two without posters at inspection.
-Preserve every entry, including series-like titles. `watchlist_scraper.js`
-produces title/ID records; `process_watchlist.py` prints mappings for an obsolete
-`DISNEY_IDS` constant rather than updating JSON. Do not follow that old import path.
+## DNS and certificates
 
-Tests cover catalog shape/lookup, legacy response/pass-through, health isolation,
-cooldown/busy, lock release, exact launch command, one reconnect, authorization,
-startup timeout and socket closure. A loopback test exercises actual ADB library
-timeouts. They do not prove on-screen playback or UI accessibility. Bundled Python
-lacks pytest; tests were inspected but not successfully executed here.
+| Name | Meaning |
+|---|---|
+| `fradkin.net` and existing website/mail names | Existing GoDaddy Builder website and Google/Gmail email; retained |
+| `moviemagic.fradkin.net` | Existing private movie-grid hostname, pointing to the LAN server |
+| `movies-api.fradkin.net` | Dedicated public Alexa hostname; dynamic A record for WAN IPv4 |
+| `fradkin-movies.tplinkdns.com` | Deco DDNS registration; no longer the CNAME target for the Alexa hostname |
 
-## Differences from the proposed architecture
+GoDaddy retains registration and authoritative DNS. A systemd timer runs the
+standard-library Python updater roughly every five minutes. It reads the public
+IPv4 from ipify and the existing GoDaddy A record; a different address causes a
+single-record replacement by record ID, preserving TTL. It never replaces the
+whole zone. Unchanged addresses produce no write.
 
-There is no stable-key API, alias resolver, job status, authentication, tunnel,
-Alexa code, transport control, favorites store or readiness check. Existing health
-must stay non-waking. README describes a deployment workflow absent from this
-checkout; `deploy.sh` does hard-reset and restart. Documentation cannot establish
-the actual production deployment triggers.
+Caddy manages the public certificate using ACME/TLS-ALPN validation on TCP 443.
+The existing private hostname keeps Caddy's internal certificate and a direct-peer
+home-network restriction. These are separate certificate/trust cases. A private
+Caddy certificate is not the certificate presented to Amazon for the public name.
 
-No existing AGENTS, PLANS or docs planning files were found. README remains the
-original setup reference; these documents qualify it without replacing it. Real
-.env values and ADB credentials were not inspected.
+The previous CNAME to TP-Link DDNS was removed after CAA lookups for that target
+returned `SERVFAIL`. Replacing it with the direct A record allowed public issuance
+to succeed. This is the observed failure in this setup, not a claim that all
+TP-Link DDNS names always fail certificate checks.
 
-## Target system
+## Trust boundaries and request handling
 
-```mermaid
-flowchart LR
-  I[Tablet LAN session] --> F[Flask local routes]
-  E[Echo Custom Skill] --> L[AWS Lambda]
-  L --> C[HTTPS and Cloudflare Access]
-  C --> T[Outbound Tunnel]
-  T --> R[Loopback proxy allowlist]
-  R --> B[Flask /remote/api bearer boundary]
-  F --> M[MovieService key and alias resolution]
-  B --> M
-  F --> P[PlaybackService admission and jobs]
-  B --> P
-  P --> V[FireTVService fixed commands]
-  V --> A[Local ADB server]
-  A --> D[Fire TV LAN only]
-  P --> S[Phase 6 atomic state JSON]
-```
+1. **Router/UFW:** expose only public TCP 443 for Alexa. Keep the grid on the home
+   subnet, SSH restricted to the admin PC, and device/admin ports private.
+2. **Caddy:** present the public certificate and route only exact original URI
+   `/alexa` with POST; deny other public application paths. Restrict the old LAN
+   HTTPS site's direct peer so it cannot publish trusted local controls.
+3. **Nginx:** exact raw URI/method guard, request size/rate/connection/time bounds,
+   no upstream retry, and a minimal forwarded header set. Send the fixed internal
+   Host `zmm-origin.internal` without modifying the signed body.
+4. **Flask/Alexa:** independently verify size/JSON, freshness, signing certificate,
+   original-body signature, skill ID and owner user ID before calling services.
+   Context and session identities must agree. LAN access, browser cookies, bearer
+   tokens and spoofed forwarding headers cannot substitute for Alexa verification.
+5. **Playback/device:** validated catalog resolution and serialized admission,
+   fixed command templates, bounded I/O and no replay after uncertain delivery.
 
-The public URL is `/api/...`; a loopback proxy maps it to distinct
-`/remote/api/...` Flask routes, which always require bearer credentials even on
-LAN. Local and remote contracts/services are identical. Authentication does not
-depend on a spoofable forwarding header. Only explicit paths/methods are proxied.
+Both proxy and backend controls matter. HTTPS protects transport but does not
+identify the household owner; skill/account checks provide that restriction.
+The public endpoint cannot require Cloudflare Access service-token headers that
+Amazon's custom-skill client is not configured to supply.
 
-The LAN UI remains usable during AWS/Cloudflare/internet outages, with cached or
-fallback posters. Phase 4 grants signed sessions only to explicitly trusted LAN
-clients; machine tokens never enter browser JavaScript. Remote tablets are out of scope.
+The direct-peer restriction assumes Caddy can distinguish outside clients from
+home/loopback peers. A future proxy or router source-NAT change must preserve or
+deliberately redesign that boundary, not make every external caller look local.
 
-## Service and state boundaries
+The optional Amazon verifier dependencies are pinned separately. The adapter caps
+certificate I/O/cache and uses one admitted verification worker, keeping late
+verification from launching a movie. A slow/stuck verification can temporarily
+make that slot unavailable; this design bounds resources rather than claiming
+that every underlying DNS call can be interrupted immediately. Existing upstream
+SDK deprecation warnings remain a future maintenance concern, not a failed test.
 
-- MovieService owns immutable keys, private provider mapping, public projections,
-  validation and deterministic title/alias resolution. Unknown/ambiguous requests
-  have no side effects. Lambda never selects a provider ID.
-- PlaybackService owns one active/reserved command slot, legacy/new coordination,
-  cooldown, request IDs, jobs and idempotency. One background dispatcher executes
-  admitted new requests. No unbounded queue, thread-per-request or external broker.
-- FireTVService owns connections, fixed ADB templates, timeout/retry classification.
-  Routes, Lambda, tablets and Home Assistant never issue ADB commands.
-- Phase 6 StateService owns small household JSON preference/history files, atomic
-  writes and recovery. Catalog authoring stays separate.
-- Connectivity, last request, delivery and playback are distinct. Without an
-  independently verified observer, `playback.state` is always `unknown`.
-  Delivering pause/resume does not establish paused/playing.
+## State, delivery and failure behavior
 
-## Data and compatibility
+Accepted request, delivered ADB command and actual playback are different states.
+New job responses and speech describe the evidence available. The successful live
+checks additionally included the user's observation of movies playing on the TV.
 
-Keep the catalog array and `title`, `id`, `poster`; add `key`, `aliases`.
-Legacy rendering retains its projection. Migration is an explicit backed-up CLI,
-not a startup rewrite. Public APIs exclude provider IDs, device addresses and raw
-shell diagnostics. Renaming titles never renames keys.
+Jobs and request-ID repeat protection are bounded in-memory state, not a durable
+queue. Restarts lose that history and do not replay old work. Check the TV before
+repeating an uncertain request. The legacy path retains its established response
+wording and behavior rather than silently breaking existing clients.
 
-Jobs/idempotency live in bounded RAM with a random boot ID. Restart loses pending
-jobs and evidence and never replays them. Phase 6 uses versioned JSON personal
-state. Recents mean delivered launch requests, not verified watching or completion.
+If the optional profile helper sees the exact recognized picker with `zach`
+already focused, it sends one Select event and lets the pending deep link
+continue. Other screens, PIN prompts, ambiguity or uncertainty result in no
+additional selection. It never relaunches the movie as a profile-recovery step.
 
-## Deployment constraints and linked designs
+An Alexa/DNS/public-HTTPS outage does not remove the local grid path. A laptop,
+LAN, ADB or Fire TV failure affects both control paths. Disney+ streaming still
+needs Disney+ and internet service regardless of how a request was submitted.
 
-One Gunicorn worker is required. Start the dispatcher lazily in the worker, never
-during module import or preloading. A restart may interrupt delivery and must
-leave playback unknown. Preserve service HOME and authorized ADB keys.
+## What is not deployed
 
-Cloudflare is preferred for outbound-only access, with separate backend
-authentication. Never forward ADB or expose 8000 to WAN. Bind/firewall/proxy changes
-require approval and a working LAN rollback path. See [Phase 4](specs/04-secure-connectivity.md).
+Lambda-hosted handlers, Cloudflare Tunnel/Access for Alexa, IFTTT integrations,
+Home Assistant, databases/brokers, durable exactly-once delivery, general remote
+tablet access, full media transport controls and automatic PIN entry are not
+part of the working deployment. Their appearance in older phase plans does not
+mean they must be enabled to operate this system.
 
-Contracts and release gates are in [PLANS](../PLANS.md),
-[Phase 2](specs/02-playback-api.md), [Phase 3](specs/03-tablet-ui.md),
-[Phase 5](specs/05-alexa-integration.md), and [Phase 6](specs/06-personalization.md).
-Validate Fire OS/Disney+ media-key behavior on the actual target before enabling controls.
+The [operations guide](movie-magic-operations.md) records exact paths, current
+settings, upkeep and recovery. The [decision record](architecture-decisions.md)
+explains alternatives and tradeoffs. The [verification record](alexa-verification.md)
+distinguishes mocked tests, user-reported live results and remaining untested
+events such as WAN-address changes and certificate renewal.
